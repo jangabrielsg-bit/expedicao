@@ -73,8 +73,9 @@
             <div class="p-6 border-b border-ios-border flex items-center gap-3"><i class="fa-solid fa-truck-fast text-3xl text-ios-blue"></i><div><h2 class="text-lg font-bold text-white leading-tight">Expedição</h2><p class="text-xs text-ios-textMuted" id="nome-usuario">Usuário</p></div></div>
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <div class="nav-item active nav-btn" data-target="home"><i class="fa-solid fa-house w-6 text-center mr-2"></i>Início</div>
-                <div class="nav-item nav-btn" data-target="receive"><i class="fa-solid fa-dolly w-6 text-center mr-2"></i>Receber OPs</div>
-                <div class="nav-item nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i>Histórico</div>
+                <div class="nav-item nav-btn" data-target="receive"><i class="fa-solid fa-dolly w-6 text-center mr-3 text-ios-green"></i>Receber OPs</div>
+                <div class="nav-item nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box w-6 text-center mr-3 text-ios-orange"></i>Saídas / Entregas</div>
+                <div class="nav-item nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-3 text-ios-blue"></i>Histórico Entradas</div>
                 <div class="nav-item nav-btn" data-target="config"><i class="fa-solid fa-gear w-6 text-center mr-2"></i>Config. Rendimentos</div>
             </nav>
             <div class="p-4 border-t border-ios-border"><button id="btn-sair" class="nav-item w-full text-ios-red hover:bg-ios-red/10 hover:text-ios-red justify-start"><i class="fa-solid fa-right-from-bracket w-6 text-center mr-2"></i>Sair</button></div>
@@ -83,8 +84,9 @@
         <!-- Bottom Nav Mobile -->
         <nav id="mobile-nav" class="md:hidden fixed bottom-0 w-full bg-ios-card/90 backdrop-blur-xl border-t border-ios-border z-50 flex justify-around items-center h-20 pb-safe">
             <div class="nav-item-mobile active nav-btn" data-target="home"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px] font-medium">Início</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="receive"><i class="fa-solid fa-dolly text-xl mb-1"></i><span class="text-[10px] font-medium">Receber</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i><span class="text-[10px] font-medium">Histórico</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="receive"><i class="fa-solid fa-dolly text-xl mb-1 text-ios-green"></i><span class="text-[10px] font-medium">Entrada</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box text-xl mb-1 text-ios-orange"></i><span class="text-[10px] font-medium">Saída</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left text-xl mb-1 text-ios-blue"></i><span class="text-[10px] font-medium">Histórico</span></div>
             <div class="nav-item-mobile nav-btn" data-target="config"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-medium">Config</span></div>
         </nav>
 
@@ -145,6 +147,7 @@
                                 <tr>
                                     <th class="base-th">Data/Hora</th>
                                     <th class="base-th">Produto</th>
+                                    <th class="base-th text-center">Lote</th>
                                     <th class="base-th text-right">Qtd Esperada</th>
                                     <th class="base-th text-right text-ios-blue">Qtd Recebida</th>
                                     <th class="base-th text-center">Divergência</th>
@@ -153,6 +156,66 @@
                             </thead>
                             <tbody id="history-body" class="divide-y divide-ios-border/50"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SAÍDAS / ENTREGAS -->
+            <div id="screen-outbound" class="screen-panel hidden">
+                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-truck-ramp-box text-ios-orange mr-3"></i>Registro de Saídas (Entregas)</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="col-span-1">
+                        <div class="card">
+                            <h2 class="title-md mb-4 text-white">Nova Saída</h2>
+                            <form id="outbound-form" class="space-y-4">
+                                <div>
+                                    <label class="form-label">Produto Expedido</label>
+                                    <select id="out-product" required class="form-input bg-ios-bg text-sm py-2"></select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="form-label">Lote</label>
+                                        <input type="text" id="out-lote" required class="form-input text-sm py-2">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Validade</label>
+                                        <input type="date" id="out-validade" required class="form-input text-sm py-2">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label">Quantidade</label>
+                                    <input type="number" id="out-qty" required step="0.01" min="0.01" class="form-input text-sm py-2 font-bold text-ios-blue">
+                                </div>
+                                <div>
+                                    <label class="form-label">Destino / Cliente / Rota</label>
+                                    <input type="text" id="out-dest" required class="form-input text-sm py-2" placeholder="Ex: Rota 1, Cliente X">
+                                </div>
+                                <button type="submit" class="btn-primary w-full mt-2"><i class="fa-solid fa-truck-fast mr-2"></i>Registrar Saída</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <div class="card h-full">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="title-md mb-0 text-white">Últimas Saídas</h2>
+                                <input type="date" id="out-date-filter" class="form-input w-40 text-sm py-1.5" onchange="renderOutboundHistory()">
+                            </div>
+                            <div class="table-container max-h-[500px] overflow-y-auto">
+                                <table class="base-table">
+                                    <thead class="base-thead">
+                                        <tr>
+                                            <th class="base-th">Data</th>
+                                            <th class="base-th">Produto</th>
+                                            <th class="base-th text-center">Lote</th>
+                                            <th class="base-th text-right">Qtd</th>
+                                            <th class="base-th">Destino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="outbound-history-body" class="divide-y divide-ios-border/50"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -214,7 +277,18 @@
                     </div>
                 </div>
                 
-                <div class="bg-ios-bg border border-dashed border-ios-border rounded-xl p-3 flex justify-between items-center" id="recv-divergence-box">
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Lote / Fab.</label>
+                        <input type="text" id="recv-lote" required class="form-input text-sm py-2 border-ios-border bg-ios-bg" placeholder="Ex: L1234">
+                    </div>
+                    <div>
+                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Validade</label>
+                        <input type="date" id="recv-validade" required class="form-input text-sm py-2 border-ios-border bg-ios-bg">
+                    </div>
+                </div>
+                
+                <div class="bg-ios-bg border border-dashed border-ios-border rounded-xl p-3 flex justify-between items-center mt-2" id="recv-divergence-box">
                     <span class="text-sm font-semibold text-ios-textMuted">Divergência:</span>
                     <span id="recv-divergence" class="font-bold text-xl text-white">0.00</span>
                 </div>
@@ -306,6 +380,7 @@
         let localProducts = [];
         let localOps = [];
         let localEntries = [];
+        let localOutbound = [];
 
         onAuthStateChanged(auth, async u => {
             if(u) {
@@ -331,6 +406,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     id('hist-date-filter').value = today;
                     if(id('ops-date-filter')) id('ops-date-filter').value = today;
+                    if(id('out-date-filter')) id('out-date-filter').value = today;
                     
                     await refreshData(true);
                 } catch(e) { window.showNotif('Erro de conexão.', true); console.error(e); }
@@ -358,11 +434,17 @@
                 // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS)
                 const allEntries = await DB.getAll('expedition_entries', [where('date', '>=', limitStr)]);
                 localEntries = allEntries;
+                
+                // 4. SAÍDAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS)
+                const allOut = await DB.getAll('expedition_outbound', [where('date', '>=', limitStr)]);
+                localOutbound = allOut;
 
                 renderDashboard();
                 renderOpsPendentes();
                 renderHistory();
                 renderConfig();
+                renderOutboundOptions();
+                renderOutboundHistory();
                 
                 if(forceDb) window.showNotif('Dados Sincronizados!');
             } catch (e) {
@@ -455,6 +537,7 @@
             id('recv-product-name').innerText = prod.name;
             id('recv-expected').value = expected.toFixed(2);
             id('recv-actual').value = expected.toFixed(2); 
+            id('recv-lote').value = op.outputBatch || op.id.substring(0,6).toUpperCase();
             
             document.querySelectorAll('.recv-unit').forEach(el => el.innerText = uom);
             updateDivergence();
@@ -493,7 +576,9 @@
                     expectedQty: exp,
                     actualQty: act,
                     divergence: act - exp,
-                    uom: id('recv-expected').nextElementSibling.innerText
+                    uom: id('recv-expected').nextElementSibling.innerText,
+                    lote: id('recv-lote').value.trim(),
+                    validade: id('recv-validade').value
                 };
                 const newId = await DB.add('expedition_entries', entry);
                 entry.id = newId;
@@ -544,6 +629,7 @@
                     <tr class="base-tr">
                         <td class="base-td text-[11px] text-ios-textMuted">${dt}</td>
                         <td class="base-td font-bold text-white">${e.productName}</td>
+                        <td class="base-td text-center font-mono text-[11px] text-ios-textMuted">${e.lote || '-'}</td>
                         <td class="base-td text-right font-mono text-ios-textMuted">${e.expectedQty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
                         <td class="base-td text-right font-mono font-bold text-ios-blue">${e.actualQty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
                         <td class="base-td text-center">${diffHtml}</td>
@@ -552,6 +638,70 @@
                 `;
             }).join('');
         };
+
+        window.renderOutboundOptions = () => {
+            const sel = id('out-product');
+            if(!sel) return;
+            sel.innerHTML = '<option value="">Selecione um Produto...</option>' + 
+                localProducts.map(p => `<option value="${p.id}">${p.name} (${p.expUoM || 'un'})</option>`).join('');
+        };
+
+        window.renderOutboundHistory = () => {
+            const tbody = id('outbound-history-body');
+            if(!tbody) return;
+            const dtFilter = id('out-date-filter').value;
+            
+            let list = [...localOutbound];
+            if(dtFilter) list = list.filter(e => e.date && e.date.startsWith(dtFilter));
+            list.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma saída nesta data.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(e => `
+                <tr class="base-tr">
+                    <td class="base-td text-[11px] text-ios-textMuted">${new Date(e.date).toLocaleString('pt-BR')}</td>
+                    <td class="base-td font-bold text-white">${e.productName}</td>
+                    <td class="base-td text-center font-mono text-[11px]">${e.lote}</td>
+                    <td class="base-td text-right font-mono font-bold text-ios-orange">${e.qty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
+                    <td class="base-td text-ios-textMuted">${e.destination}</td>
+                </tr>
+            `).join('');
+        };
+
+        addEvt('outbound-form', 'submit', async e => {
+            e.preventDefault();
+            const pId = id('out-product').value;
+            const p = localProducts.find(x => x.id === pId);
+            if(!p) return window.showNotif('Produto não selecionado', true);
+
+            show(id('loading-overlay'));
+            try {
+                const outDoc = {
+                    productId: p.id,
+                    productName: p.name,
+                    lote: id('out-lote').value.trim(),
+                    validade: id('out-validade').value,
+                    qty: parseFloat(id('out-qty').value),
+                    uom: p.expUoM || 'un',
+                    destination: id('out-dest').value.trim(),
+                    date: new Date().toISOString()
+                };
+                const newId = await DB.add('expedition_outbound', outDoc);
+                outDoc.id = newId;
+                localOutbound.push(outDoc);
+                
+                id('outbound-form').reset();
+                renderOutboundHistory();
+                window.showNotif('Saída registrada!');
+            } catch(err) {
+                console.error(err);
+                window.showNotif('Erro ao registrar', true);
+            }
+            hide(id('loading-overlay'));
+        });
 
         function renderConfig() {
             const tbody = id('config-body');
