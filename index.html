@@ -340,8 +340,8 @@
                 // 1. INVENTÁRIO (PRODUTOS FINAIS APENAS)
                 // Se já carregou na memória e não foi forçado, reaproveita.
                 if(forceDb || localProducts.length === 0) {
-                    const allFinal = await DB.getAll('inventory', [where('type', '==', 'produto_final')]);
-                    localProducts = allFinal;
+                    const rDocs = await getDocs(getCol('recipes'));
+                    localProducts = rDocs.docs.map(d => ({ id: d.id, ...d.data() }));
                 }
                 
                 // 2. ORDEM DE PRODUÇÃO (LIMITADO A 7 DIAS)
@@ -605,7 +605,7 @@
             try {
                 p.expUoM = uom;
                 p.expYield = yieldVal;
-                await DB.update('inventory', p);
+                await DB.update('recipes', p);
                 window.showNotif('Configuração Salva!');
             } catch(e) {
                 console.error(e);
