@@ -291,11 +291,11 @@
 
         addEvt('btn-login-google','click',()=>{
             const m=id('mensagem-erro'); if(m){m.innerText="Abrindo...";show(m);}
-            signInWithPopup(auth,provider).catch(()=>{if(m){m.innerHTML="Erro de Login";show(m);}});
+            signInWithPopup(auth,provider).catch((err)=>{if(m){m.innerHTML="Erro de Login: " + err.message;show(m);}});
         });
         addEvt('btn-bypass-login','click',async()=>{
             const m=id('mensagem-erro'); if(m){m.innerText="Entrando anonimamente...";show(m);}
-            try{await signInAnonymously(auth);}catch(e){if(m){m.innerHTML="Erro no login anônimo.";show(m);}}
+            try{await signInAnonymously(auth);}catch(err){if(m){m.innerHTML="Erro no login: " + err.message;show(m);}}
         });
         const logout=()=>{signOut(auth).then(()=>window.showNotif('Sessão encerrada.')).catch(console.error);};
         addEvt('btn-sair','click',logout);
