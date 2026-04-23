@@ -74,6 +74,7 @@
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <div class="nav-item active nav-btn" data-target="home"><i class="fa-solid fa-house w-6 text-center mr-2"></i>Início</div>
                 <div class="nav-item nav-btn" data-target="receive"><i class="fa-solid fa-dolly w-6 text-center mr-3 text-ios-green"></i>Receber OPs</div>
+                <div class="nav-item nav-btn" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center mr-3 text-ios-blue"></i>Estoque Atual</div>
                 <div class="nav-item nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box w-6 text-center mr-3 text-ios-orange"></i>Saídas / Entregas</div>
                 <div class="nav-item nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-3 text-ios-blue"></i>Histórico Entradas</div>
                 <div class="nav-item nav-btn" data-target="config"><i class="fa-solid fa-gear w-6 text-center mr-2"></i>Config. Rendimentos</div>
@@ -85,6 +86,7 @@
         <nav id="mobile-nav" class="md:hidden fixed bottom-0 w-full bg-ios-card/90 backdrop-blur-xl border-t border-ios-border z-50 flex justify-around items-center h-20 pb-safe">
             <div class="nav-item-mobile active nav-btn" data-target="home"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px] font-medium">Início</span></div>
             <div class="nav-item-mobile nav-btn" data-target="receive"><i class="fa-solid fa-dolly text-xl mb-1 text-ios-green"></i><span class="text-[10px] font-medium">Entrada</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="inventory"><i class="fa-solid fa-boxes-stacked text-xl mb-1 text-ios-blue"></i><span class="text-[10px] font-medium">Estoque</span></div>
             <div class="nav-item-mobile nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box text-xl mb-1 text-ios-orange"></i><span class="text-[10px] font-medium">Saída</span></div>
             <div class="nav-item-mobile nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left text-xl mb-1 text-ios-blue"></i><span class="text-[10px] font-medium">Histórico</span></div>
             <div class="nav-item-mobile nav-btn" data-target="config"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-medium">Config</span></div>
@@ -160,42 +162,62 @@
                 </div>
             </div>
 
+            <!-- ESTOQUE ATUAL -->
+            <div id="screen-inventory" class="screen-panel hidden">
+                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-boxes-stacked text-ios-blue mr-3"></i>Controle de Estoque (Expedição)</h1>
+                <div class="card mb-6">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <input type="text" id="search-inventory" class="form-input w-full md:w-64" placeholder="Buscar produto...">
+                        </div>
+                        <div class="text-sm text-ios-textMuted bg-ios-bg px-3 py-1.5 rounded-lg border border-ios-border"><i class="fa-solid fa-circle-info mr-2"></i>Sugestão Média: Garantia de <span class="font-bold text-white">3</span> dias</div>
+                    </div>
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="base-table">
+                            <thead class="base-thead">
+                                <tr>
+                                    <th class="base-th">Produto</th>
+                                    <th class="base-th text-center">Físico Atual</th>
+                                    <th class="base-th text-center">Mín/Máx</th>
+                                    <th class="base-th text-center">Saída Dia (Teórica)</th>
+                                    <th class="base-th text-center">Saída Dia (Real 30d)</th>
+                                    <th class="base-th text-center text-ios-orange">Sugestão (Mínimo)</th>
+                                    <th class="base-th text-center text-ios-blue">Sugestão (Média)</th>
+                                    <th class="base-th text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body" class="divide-y divide-ios-border/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- SAÍDAS / ENTREGAS -->
             <div id="screen-outbound" class="screen-panel hidden">
                 <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-truck-ramp-box text-ios-orange mr-3"></i>Registro de Saídas (Entregas)</h1>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-1">
                         <div class="card">
                             <h2 class="title-md mb-4 text-white">Nova Saída</h2>
                             <form id="outbound-form" class="space-y-4">
                                 <div>
-                                    <label class="form-label">Produto Expedido</label>
-                                    <select id="out-product" required class="form-input bg-ios-bg text-sm py-2"></select>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="form-label">Lote</label>
-                                        <input type="text" id="out-lote" required class="form-input text-sm py-2">
-                                    </div>
-                                    <div>
-                                        <label class="form-label">Validade</label>
-                                        <input type="date" id="out-validade" required class="form-input text-sm py-2">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="form-label">Quantidade</label>
-                                    <input type="number" id="out-qty" required step="0.01" min="0.01" class="form-input text-sm py-2 font-bold text-ios-blue">
-                                </div>
-                                <div>
                                     <label class="form-label">Destino / Cliente / Rota</label>
                                     <input type="text" id="out-dest" required class="form-input text-sm py-2" placeholder="Ex: Rota 1, Cliente X">
                                 </div>
-                                <button type="submit" class="btn-primary w-full mt-2"><i class="fa-solid fa-truck-fast mr-2"></i>Registrar Saída</button>
+                                <div class="border-t border-ios-border pt-4">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h3 class="title-md text-sm text-ios-textMuted">Itens Expedidos</h3>
+                                        <span class="text-[10px] bg-ios-orange/20 text-ios-orange font-bold px-2 py-1 rounded">Baixa automática PVPS</span>
+                                    </div>
+                                    <div id="outbound-items-container" class="space-y-3 mb-4"></div>
+                                    <button type="button" id="add-outbound-item-btn" class="text-ios-blue bg-ios-bg px-3 py-2 rounded-lg border border-ios-border text-sm w-full font-semibold"><i class="fa-solid fa-plus mr-2"></i>Adicionar Item</button>
+                                </div>
+                                <button type="submit" class="btn-primary w-full mt-2 py-3"><i class="fa-solid fa-truck-fast mr-2"></i>Finalizar Saída</button>
                             </form>
                         </div>
                     </div>
-                    <div class="col-span-2">
+                    <div class="col-span-1">
                         <div class="card h-full">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="title-md mb-0 text-white">Últimas Saídas</h2>
@@ -207,7 +229,7 @@
                                         <tr>
                                             <th class="base-th">Data</th>
                                             <th class="base-th">Produto</th>
-                                            <th class="base-th text-center">Lote</th>
+                                            <th class="base-th text-center">Lotes (PVPS)</th>
                                             <th class="base-th text-right">Qtd</th>
                                             <th class="base-th">Destino</th>
                                         </tr>
@@ -248,6 +270,35 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- Modal Inventory Config -->
+    <div id="inventory-config-modal" class="modal z-[6000]">
+        <div class="modal-content max-w-sm">
+            <h2 class="title-md mb-2 text-ios-blue"><i class="fa-solid fa-sliders mr-2"></i>Limites e Metas</h2>
+            <p class="text-sm text-ios-textMuted mb-4 border-b border-ios-border pb-4" id="inv-cfg-name">-</p>
+            <form id="inventory-config-form" class="space-y-4">
+                <input type="hidden" id="inv-cfg-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Estoque Mínimo</label>
+                        <input type="number" step="0.01" min="0" id="inv-cfg-min" class="form-input text-sm py-2">
+                    </div>
+                    <div>
+                        <label class="form-label">Estoque Máximo</label>
+                        <input type="number" step="0.01" min="0" id="inv-cfg-max" class="form-input text-sm py-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Saída Teórica Diária</label>
+                    <input type="number" step="0.01" min="0" id="inv-cfg-theoretical" class="form-input text-sm py-2">
+                </div>
+                <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-ios-border">
+                    <button type="button" class="btn-secondary close-modal" data-target="inventory-config-modal">Cancelar</button>
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save mr-2"></i>Salvar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Modal Recebimento -->
@@ -381,6 +432,7 @@
         let localOps = [];
         let localEntries = [];
         let localOutbound = [];
+        let localExpBatches = [];
 
         onAuthStateChanged(auth, async u => {
             if(u) {
@@ -439,11 +491,15 @@
                 const allOut = await DB.getAll('expedition_outbound', [where('date', '>=', limitStr)]);
                 localOutbound = allOut;
 
+                // 5. LOTES DA EXPEDIÇÃO (Ativos)
+                const allBatches = await DB.getAll('expedition_batches');
+                localExpBatches = allBatches.filter(b => b.qty > 0);
+
                 renderDashboard();
                 renderOpsPendentes();
                 renderHistory();
                 renderConfig();
-                renderOutboundOptions();
+                renderInventory();
                 renderOutboundHistory();
                 
                 if(forceDb) window.showNotif('Dados Sincronizados!');
@@ -584,6 +640,22 @@
                 entry.id = newId;
                 localEntries.push(entry);
 
+                // ATUALIZAR LOTES DA EXPEDIÇÃO (PVPS)
+                const batchId = `${pId}_${entry.lote}`;
+                let bDoc = localExpBatches.find(x => x.id === batchId);
+                if(bDoc) {
+                    bDoc.qty += act;
+                    await DB.update('expedition_batches', bDoc);
+                } else {
+                    bDoc = { id: batchId, productId: pId, productName: p.name, lote: entry.lote, validade: entry.validade, qty: act };
+                    await DB.update('expedition_batches', bDoc); // will create since id is provided
+                    localExpBatches.push(bDoc);
+                }
+
+                // ATUALIZAR ESTOQUE ABSOLUTO DA RECEITA
+                p.expStock = (p.expStock || 0) + act;
+                await DB.update('recipes', p);
+
                 op.expeditionStatus = 'recebida';
                 await DB.update('productionOrders', op);
 
@@ -593,6 +665,7 @@
                 renderDashboard();
                 renderOpsPendentes();
                 renderHistory();
+                renderInventory();
             } catch(err) {
                 console.error(err);
                 window.showNotif('Erro ao salvar entrada', true);
@@ -639,12 +712,114 @@
             }).join('');
         };
 
-        window.renderOutboundOptions = () => {
-            const sel = id('out-product');
-            if(!sel) return;
-            sel.innerHTML = '<option value="">Selecione um Produto...</option>' + 
-                localProducts.map(p => `<option value="${p.id}">${p.name} (${p.expUoM || 'un'})</option>`).join('');
+        // ================= INVENTORY =================
+        function renderInventory() {
+            const tbody = id('inventory-body');
+            if(!tbody) return;
+            const q = (id('search-inventory').value || '').toLowerCase();
+            
+            let list = [...localProducts];
+            if(q) list = list.filter(p => (p.name||'').toLowerCase().includes(q));
+
+            // Calcular saídas médias (últimos 30 dias)
+            // Agrupar localOutbound por productId. Cada item em localOutbound tem um array de consumedBatches ou qty.
+            const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+            const nowMs = Date.now();
+            
+            let html = '';
+            list.forEach(p => {
+                const stock = p.expStock || 0;
+                const min = p.expMin || 0;
+                const max = p.expMax || 0;
+                const teorica = p.expTheoreticalOut || 0;
+                
+                // Real 30d avg
+                const pOuts = localOutbound.filter(o => o.productId === p.id && (nowMs - new Date(o.date).getTime() <= thirtyDaysMs));
+                const totalOutQty = pOuts.reduce((sum, o) => sum + (o.qty || 0), 0);
+                const avgReal = totalOutQty / 30; // Média de 30 dias
+                
+                let sugMin = 0;
+                if(stock < min) sugMin = min - stock;
+                
+                // Garantia de 3 dias
+                const daysCov = 3;
+                let sugAvg = (avgReal * daysCov) - stock;
+                if(sugAvg < 0) sugAvg = 0;
+
+                html += `
+                    <tr class="base-tr">
+                        <td class="base-td font-bold text-white">${p.name}</td>
+                        <td class="base-td text-center font-mono font-bold ${stock < min ? 'text-ios-red' : 'text-ios-green'}">${stock.toFixed(2)} ${p.expUoM || 'un'}</td>
+                        <td class="base-td text-center font-mono text-xs text-ios-textMuted">${min} / ${max}</td>
+                        <td class="base-td text-center font-mono text-ios-textMuted">${teorica.toFixed(2)}</td>
+                        <td class="base-td text-center font-mono text-white">${avgReal.toFixed(2)}</td>
+                        <td class="base-td text-center font-mono font-bold text-ios-orange">${sugMin > 0 ? '+'+sugMin.toFixed(2) : '-'}</td>
+                        <td class="base-td text-center font-mono font-bold text-ios-blue">${sugAvg > 0 ? '+'+sugAvg.toFixed(2) : '-'}</td>
+                        <td class="base-td text-center">
+                            <button class="bg-ios-bg border border-ios-border px-2 py-1 rounded text-ios-blue hover:bg-ios-blue/10" onclick="editInvConfig('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html || `<tr><td colspan="8" class="text-center py-6 text-ios-textMuted">Nenhum produto</td></tr>`;
+        }
+        addEvt('search-inventory', 'input', renderInventory);
+
+        window.editInvConfig = (idProd) => {
+            const p = localProducts.find(x => x.id === idProd);
+            if(!p) return;
+            id('inv-cfg-id').value = p.id;
+            id('inv-cfg-name').innerText = p.name;
+            id('inv-cfg-min').value = p.expMin || 0;
+            id('inv-cfg-max').value = p.expMax || 0;
+            id('inv-cfg-theoretical').value = p.expTheoreticalOut || 0;
+            show(id('inventory-config-modal'));
         };
+
+        addEvt('inventory-config-form', 'submit', async e => {
+            e.preventDefault();
+            const pId = id('inv-cfg-id').value;
+            const p = localProducts.find(x => x.id === pId);
+            if(!p) return;
+
+            show(id('loading-overlay'));
+            try {
+                p.expMin = parseFloat(id('inv-cfg-min').value) || 0;
+                p.expMax = parseFloat(id('inv-cfg-max').value) || 0;
+                p.expTheoreticalOut = parseFloat(id('inv-cfg-theoretical').value) || 0;
+                await DB.update('recipes', p);
+                hide(id('inventory-config-modal'));
+                renderInventory();
+                window.showNotif('Configuração de estoque salva!');
+            } catch(err) {
+                console.error(err);
+                window.showNotif('Erro ao salvar', true);
+            }
+            hide(id('loading-overlay'));
+        });
+
+        // ================= OUTBOUND (SAÍDAS PVPS) =================
+        function buildOutboundOptions() {
+            return '<option value="">Selecione...</option>' + localProducts.map(p => `<option value="${p.id}">${p.name} (${p.expUoM || 'un'})</option>`).join('');
+        }
+
+        addEvt('add-outbound-item-btn', 'click', () => {
+            const container = id('outbound-items-container');
+            const row = document.createElement('div');
+            row.className = 'flex items-end gap-2 bg-ios-bg p-2 rounded-lg border border-ios-border';
+            row.innerHTML = `
+                <div class="flex-1">
+                    <label class="form-label text-[10px]">Produto</label>
+                    <select class="form-input text-xs py-1.5 req-out-prod" required>${buildOutboundOptions()}</select>
+                </div>
+                <div class="w-24">
+                    <label class="form-label text-[10px]">Qtd</label>
+                    <input type="number" step="0.01" min="0.01" class="form-input text-xs py-1.5 font-bold text-ios-blue req-out-qty" required>
+                </div>
+                <button type="button" class="btn-secondary px-2 py-1.5 rounded-lg text-ios-red" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(row);
+        });
 
         window.renderOutboundHistory = () => {
             const tbody = id('outbound-history-body');
@@ -660,45 +835,93 @@
                 return;
             }
 
-            tbody.innerHTML = list.map(e => `
+            tbody.innerHTML = list.map(e => {
+                const consumedStr = (e.consumedBatches || []).map(b => `${b.lote}(${b.qty})`).join(', ') || e.lote;
+                return `
                 <tr class="base-tr">
                     <td class="base-td text-[11px] text-ios-textMuted">${new Date(e.date).toLocaleString('pt-BR')}</td>
                     <td class="base-td font-bold text-white">${e.productName}</td>
-                    <td class="base-td text-center font-mono text-[11px]">${e.lote}</td>
-                    <td class="base-td text-right font-mono font-bold text-ios-orange">${e.qty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
+                    <td class="base-td text-center font-mono text-[10px] text-ios-orange">${consumedStr}</td>
+                    <td class="base-td text-right font-mono font-bold text-ios-orange">${e.qty.toFixed(2)} <span class="text-[9px]">${e.uom || ''}</span></td>
                     <td class="base-td text-ios-textMuted">${e.destination}</td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         };
 
         addEvt('outbound-form', 'submit', async e => {
             e.preventDefault();
-            const pId = id('out-product').value;
-            const p = localProducts.find(x => x.id === pId);
-            if(!p) return window.showNotif('Produto não selecionado', true);
+            const rows = document.querySelectorAll('#outbound-items-container > div');
+            if(rows.length === 0) return window.showNotif('Adicione pelo menos um item', true);
+
+            const dest = id('out-dest').value.trim();
+            const dateStr = new Date().toISOString();
+
+            // Prepare items
+            let itemsToProcess = [];
+            for(let row of rows) {
+                const pId = row.querySelector('.req-out-prod').value;
+                const qty = parseFloat(row.querySelector('.req-out-qty').value);
+                const p = localProducts.find(x => x.id === pId);
+                if(!p || isNaN(qty) || qty <= 0) return window.showNotif('Verifique os itens inseridos', true);
+                
+                // Verify if there is enough physical stock across all batches
+                const availableBatches = localExpBatches.filter(b => b.productId === pId && b.qty > 0);
+                const totalAvail = availableBatches.reduce((s, b) => s + b.qty, 0);
+                if(totalAvail < qty) {
+                    return window.showNotif(`Estoque insuficiente para ${p.name}. Disponível: ${totalAvail.toFixed(2)}`, true);
+                }
+                
+                itemsToProcess.push({ p, qty, availableBatches });
+            }
 
             show(id('loading-overlay'));
             try {
-                const outDoc = {
-                    productId: p.id,
-                    productName: p.name,
-                    lote: id('out-lote').value.trim(),
-                    validade: id('out-validade').value,
-                    qty: parseFloat(id('out-qty').value),
-                    uom: p.expUoM || 'un',
-                    destination: id('out-dest').value.trim(),
-                    date: new Date().toISOString()
-                };
-                const newId = await DB.add('expedition_outbound', outDoc);
-                outDoc.id = newId;
-                localOutbound.push(outDoc);
-                
+                for(let item of itemsToProcess) {
+                    let remainingToDeduct = item.qty;
+                    let consumed = [];
+                    
+                    // SORT BATCHES BY VALIDADE ASC (PVPS)
+                    item.availableBatches.sort((a,b) => new Date(a.validade) - new Date(b.validade));
+                    
+                    for(let b of item.availableBatches) {
+                        if(remainingToDeduct <= 0) break;
+                        
+                        let deductFromThisBatch = Math.min(b.qty, remainingToDeduct);
+                        b.qty -= deductFromThisBatch;
+                        remainingToDeduct -= deductFromThisBatch;
+                        
+                        await DB.update('expedition_batches', b);
+                        consumed.push({ lote: b.lote, validade: b.validade, qty: deductFromThisBatch });
+                    }
+                    
+                    // Update Product Stock
+                    item.p.expStock = (item.p.expStock || 0) - item.qty;
+                    await DB.update('recipes', item.p);
+
+                    // Record Outbound Entry
+                    const outDoc = {
+                        productId: item.p.id,
+                        productName: item.p.name,
+                        qty: item.qty,
+                        uom: item.p.expUoM || 'un',
+                        destination: dest,
+                        date: dateStr,
+                        consumedBatches: consumed
+                    };
+                    const newId = await DB.add('expedition_outbound', outDoc);
+                    outDoc.id = newId;
+                    localOutbound.push(outDoc);
+                }
+
                 id('outbound-form').reset();
+                id('outbound-items-container').innerHTML = '';
                 renderOutboundHistory();
-                window.showNotif('Saída registrada!');
+                renderInventory();
+                window.showNotif('Saída em lote registrada com sucesso!');
             } catch(err) {
                 console.error(err);
-                window.showNotif('Erro ao registrar', true);
+                window.showNotif('Erro ao processar saída', true);
             }
             hide(id('loading-overlay'));
         });
