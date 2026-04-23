@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark" style="color-scheme: dark;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Expedição OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'] },
+                    colors: {
+                        ios: { bg: '#000000', card: '#1c1c1e', cardHover: '#2c2c2e', blue: '#0a84ff', green: '#30d158', red: '#ff453a', orange: '#ff9f0a', text: '#ffffff', textMuted: 'rgba(235, 235, 245, 0.6)', border: '#38383a', input: '#2c2c2e' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer components {
+            body { @apply bg-ios-bg text-ios-text font-sans antialiased; }
+            .card { @apply bg-ios-card p-4 sm:p-6 rounded-2xl shadow-sm border border-ios-border; }
+            .title-lg { @apply text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6 tracking-tight; }
+            .title-md { @apply text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 tracking-tight; }
+            .form-label { @apply block text-sm font-medium text-ios-textMuted mb-1; }
+            .form-input { @apply block w-full bg-ios-input text-white rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-ios-blue transition-all border border-ios-border/50; }
+            .btn-primary { @apply bg-ios-blue hover:opacity-90 text-white font-semibold py-3 px-5 rounded-xl transition-all flex items-center justify-center; }
+            .btn-secondary { @apply bg-ios-cardHover hover:bg-gray-700 text-white font-semibold py-3 px-5 rounded-xl transition-all border border-ios-border flex items-center justify-center; }
+            .table-container { @apply overflow-x-auto rounded-xl border border-ios-border bg-ios-card w-full; }
+            .base-table { @apply min-w-full w-full text-sm text-left text-ios-textMuted; }
+            .base-thead { @apply text-xs uppercase bg-ios-cardHover text-gray-400 border-b border-ios-border sticky top-0 z-10 shadow-sm; }
+            .base-tr { @apply border-b border-ios-border hover:bg-ios-cardHover transition-colors; }
+            .base-th { @apply px-4 sm:px-5 py-3 sm:py-4 font-semibold whitespace-nowrap bg-ios-cardHover; }
+            .base-td { @apply px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap sm:whitespace-normal; }
+            .badge { @apply text-xs font-semibold px-2 py-1 rounded-md; }
+            .nav-item { @apply flex items-center p-3 text-ios-textMuted rounded-xl hover:bg-ios-cardHover hover:text-white transition-all cursor-pointer font-medium mb-1; }
+            .nav-item.active { @apply bg-ios-blue/10 text-ios-blue font-bold; }
+            .nav-item-mobile { @apply flex flex-col items-center justify-center w-full h-full text-ios-textMuted transition-colors cursor-pointer; }
+            .nav-item-mobile.active { @apply text-ios-blue; }
+        }
+    </style>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: #636366; }
+        .modal { display: none; position: fixed; z-index: 50; inset: 0; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 1rem; }
+        .modal-content { background-color: #1c1c1e; border: 1px solid #38383a; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 1.5rem; width: 100%; max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <div id="notification-modal" class="hidden"></div>
+    <div id="loading-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999999] flex flex-col justify-center items-center hidden"><div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ios-blue mb-4"></div><p class="text-white font-medium animate-pulse">Sincronizando Expedição...</p></div>
+
+    <!-- Login -->
+    <div id="login-wrapper" class="min-h-screen flex items-center justify-center p-4 bg-black relative overflow-hidden">
+        <div class="absolute inset-0 z-0 opacity-20"><div class="absolute top-1/4 left-1/4 w-96 h-96 bg-ios-blue rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div><div class="absolute top-1/3 right-1/4 w-96 h-96 bg-ios-orange rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div></div>
+        <div class="card max-w-md w-full relative z-10 border border-ios-border/50 bg-ios-card/80 backdrop-blur-xl">
+            <div class="text-center mb-8"><div class="w-20 h-20 bg-ios-blue/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-ios-blue/30"><i class="fa-solid fa-truck-fast text-4xl text-ios-blue"></i></div><h1 class="text-3xl font-bold text-white tracking-tight">Expedição OS</h1><p class="text-ios-textMuted mt-2">Controle de Saídas e Entregas</p></div>
+            <div class="space-y-4"><button id="btn-login-google" class="w-full bg-white text-black font-bold py-3 px-4 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors"><i class="fa-brands fa-google mr-3"></i>Entrar com Google</button><div class="relative flex py-2 items-center"><div class="flex-grow border-t border-ios-border"></div><span class="flex-shrink-0 mx-4 text-ios-textMuted text-xs">ou</span><div class="flex-grow border-t border-ios-border"></div></div><button id="btn-bypass-login" class="btn-secondary w-full">Acesso Rápido (Sem Login)</button></div>
+            <div id="mensagem-erro" class="hidden mt-4 p-3 bg-ios-red/10 border border-ios-red/30 text-ios-red rounded-lg text-sm text-center font-medium"></div>
+        </div>
+    </div>
+
+    <!-- App -->
+    <div id="app-wrapper" class="hidden h-screen flex flex-col md:flex-row">
+        <!-- Sidebar Desktop -->
+        <aside class="hidden md:flex flex-col w-64 bg-ios-card border-r border-ios-border fixed h-full z-40 sidebar">
+            <div class="p-6 border-b border-ios-border flex items-center gap-3"><i class="fa-solid fa-truck-fast text-3xl text-ios-blue"></i><div><h2 class="text-lg font-bold text-white leading-tight">Expedição</h2><p class="text-xs text-ios-textMuted" id="nome-usuario">Usuário</p></div></div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <div class="nav-item active nav-btn" data-target="home"><i class="fa-solid fa-house w-6 text-center mr-2"></i>Início</div>
+                <div class="nav-item nav-btn" data-target="receive"><i class="fa-solid fa-dolly w-6 text-center mr-2"></i>Receber OPs</div>
+                <div class="nav-item nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i>Histórico</div>
+                <div class="nav-item nav-btn" data-target="config"><i class="fa-solid fa-gear w-6 text-center mr-2"></i>Config. Rendimentos</div>
+            </nav>
+            <div class="p-4 border-t border-ios-border"><button id="btn-sair" class="nav-item w-full text-ios-red hover:bg-ios-red/10 hover:text-ios-red justify-start"><i class="fa-solid fa-right-from-bracket w-6 text-center mr-2"></i>Sair</button></div>
+        </aside>
+
+        <!-- Bottom Nav Mobile -->
+        <nav id="mobile-nav" class="md:hidden fixed bottom-0 w-full bg-ios-card/90 backdrop-blur-xl border-t border-ios-border z-50 flex justify-around items-center h-20 pb-safe">
+            <div class="nav-item-mobile active nav-btn" data-target="home"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px] font-medium">Início</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="receive"><i class="fa-solid fa-dolly text-xl mb-1"></i><span class="text-[10px] font-medium">Receber</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i><span class="text-[10px] font-medium">Histórico</span></div>
+            <div class="nav-item-mobile nav-btn" data-target="config"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-medium">Config</span></div>
+        </nav>
+
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8 md:ml-64 pb-24 md:pb-8 relative">
+            
+            <!-- HOME -->
+            <div id="screen-home" class="screen-panel block">
+                <h1 class="title-lg mb-6 text-ios-blue"><i class="fa-solid fa-truck-fast mr-3"></i>Dashboard Expedição</h1>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card bg-ios-blue/10 border-ios-blue/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">OPs Pendentes</p><p class="text-4xl text-ios-blue font-mono font-bold" id="dash-pendentes">0</p></div>
+                    <div class="card bg-ios-green/10 border-ios-green/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">Recebidas (Hoje)</p><p class="text-4xl text-ios-green font-mono font-bold" id="dash-recebidas">0</p></div>
+                    <div class="card bg-ios-red/10 border-ios-red/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">Divergências (Hoje)</p><p class="text-4xl text-ios-red font-mono font-bold" id="dash-divergencias">0</p></div>
+                </div>
+            </div>
+
+            <!-- RECEBIMENTO -->
+            <div id="screen-receive" class="screen-panel hidden">
+                <h1 class="title-lg mb-6"><i class="fa-solid fa-dolly text-ios-green mr-3"></i>Entrada de OPs (Estoque -> Expedição)</h1>
+                <div class="card mb-6">
+                    <p class="text-sm text-ios-textMuted mb-4">Abaixo estão as Ordens de Produção marcadas como "Concluídas" pela produção que ainda não deram entrada na expedição.</p>
+                    <div class="flex gap-2 mb-4"><input type="text" id="search-ops" class="form-input" placeholder="Buscar OP ou Produto..."></div>
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="base-table">
+                            <thead class="base-thead">
+                                <tr>
+                                    <th class="base-th">OP</th>
+                                    <th class="base-th">Produto</th>
+                                    <th class="base-th text-center">Multiplicador (Apontado)</th>
+                                    <th class="base-th text-center">Data</th>
+                                    <th class="base-th text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ops-pendentes-body" class="divide-y divide-ios-border/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORICO -->
+            <div id="screen-history" class="screen-panel hidden">
+                <h1 class="title-lg mb-6"><i class="fa-solid fa-clock-rotate-left mr-3"></i>Histórico de Recebimentos</h1>
+                <div class="card p-0 bg-transparent border-none">
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="base-table">
+                            <thead class="base-thead">
+                                <tr>
+                                    <th class="base-th">Data/Hora</th>
+                                    <th class="base-th">Produto</th>
+                                    <th class="base-th text-right">Qtd Esperada</th>
+                                    <th class="base-th text-right text-ios-blue">Qtd Recebida</th>
+                                    <th class="base-th text-center">Divergência</th>
+                                    <th class="base-th text-center">OP Ref.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body" class="divide-y divide-ios-border/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIG -->
+            <div id="screen-config" class="screen-panel hidden max-w-5xl mx-auto">
+                <h1 class="title-lg mb-6"><i class="fa-solid fa-gear mr-3"></i>Configuração de Rendimentos</h1>
+                <div class="card mb-6">
+                    <div class="bg-ios-orange/10 border border-ios-orange/30 p-4 rounded-xl mb-6 flex gap-4">
+                        <i class="fa-solid fa-circle-info text-2xl text-ios-orange"></i>
+                        <div>
+                            <h3 class="font-bold text-ios-orange mb-1">Como funciona a conversão?</h3>
+                            <p class="text-sm text-ios-textMuted">O estoque aponta as Ordens de Produção baseadas em um <b>Multiplicador</b> (ex: 2 receitas). A expedição precisa saber quanto "1 receita" deve gerar de forma física. Configure abaixo se o produto final é medido em Peso (KG) ou Unidade (UN) e qual a quantidade que 1 receita inteira gera.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mb-4"><input type="text" id="search-config" class="form-input" placeholder="Buscar Produto Final..."></div>
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="base-table">
+                            <thead class="base-thead">
+                                <tr>
+                                    <th class="base-th">Produto Final</th>
+                                    <th class="base-th text-center">Controle Expedição</th>
+                                    <th class="base-th text-center">Rendimento por OP (Multiplicador=1)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="config-body" class="divide-y divide-ios-border/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Recebimento -->
+    <div id="receive-modal" class="modal z-[6000]">
+        <div class="modal-content max-w-md">
+            <h2 class="title-md mb-2 text-ios-blue"><i class="fa-solid fa-dolly mr-2"></i>Receber Produto</h2>
+            <p class="text-sm text-ios-textMuted mb-4 border-b border-ios-border pb-4" id="recv-product-name">-</p>
+            
+            <form id="receive-form" class="space-y-4">
+                <input type="hidden" id="recv-op-id">
+                <input type="hidden" id="recv-product-id">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-ios-bg border border-ios-border p-3 rounded-xl">
+                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Qtd. Teórica Esperada</label>
+                        <div class="flex items-end gap-2">
+                            <input type="text" id="recv-expected" readonly class="form-input bg-transparent border-none text-white font-bold text-2xl px-0 py-0 cursor-not-allowed">
+                            <span class="text-ios-textMuted font-bold mb-1 recv-unit">UN</span>
+                        </div>
+                    </div>
+                    <div class="bg-ios-bg border border-ios-blue p-3 rounded-xl relative">
+                        <label class="form-label text-[10px] uppercase font-bold text-ios-blue">Qtd. Real Recebida</label>
+                        <div class="flex items-end gap-2">
+                            <input type="number" id="recv-actual" step="0.001" min="0" required class="form-input bg-transparent border-none text-ios-blue font-bold text-2xl px-0 py-0 focus:ring-0">
+                            <span class="text-ios-blue font-bold mb-1 recv-unit">UN</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-ios-bg border border-dashed border-ios-border rounded-xl p-3 flex justify-between items-center" id="recv-divergence-box">
+                    <span class="text-sm font-semibold text-ios-textMuted">Divergência:</span>
+                    <span id="recv-divergence" class="font-bold text-xl text-white">0.00</span>
+                </div>
+                
+                <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-ios-border">
+                    <button type="button" class="btn-secondary close-modal" data-target="receive-modal">Cancelar</button>
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-check mr-2"></i>Confirmar Entrada</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts do Firebase e Lógica -->
+    <script type="module">
+        const id=n=>document.getElementById(n), show=e=>{if(e){e.style.display='flex';e.classList.remove('hidden');}}, hide=e=>{if(e){e.style.display='none';e.classList.add('hidden');}}, addEvt=(e,t,f)=>{const el=id(e);if(el)el.addEventListener(t,f);};
+        window.showNotif=(m,e=false)=>{const el=id('notification-modal');if(!el)return;el.innerHTML=e?`<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${m}`:`<i class="fa-solid fa-check mr-2"></i> ${m}`;el.className=`fixed top-6 left-1/2 transform -translate-x-1/2 z-[9999999] py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md w-max max-w-[90vw] text-center ${e?'bg-ios-red/95':'bg-ios-green/95'}`;show(el);setTimeout(()=>hide(el),4000);};
+        
+        // Modals
+        document.querySelectorAll('.close-modal').forEach(b => b.addEventListener('click', e => { hide(id(e.currentTarget.dataset.target)); }));
+
+        // Nav
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const t = e.currentTarget.dataset.target;
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll(`.nav-btn[data-target="${t}"]`).forEach(b => b.classList.add('active'));
+                document.querySelectorAll('.screen-panel').forEach(s => hide(s));
+                show(id(`screen-${t}`));
+                if(t === 'config') renderConfig();
+            });
+        });
+
+        // Firebase Setup (Idêntico ao index)
+        import{initializeApp}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut,signInAnonymously,signInWithCustomToken}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+        import{getFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,deleteDoc,query,where,orderBy}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const isCanvas = typeof __firebase_config !== 'undefined';
+        const fC = isCanvas ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8",
+            authDomain: "estoque-b50df.firebaseapp.com",
+            projectId: "estoque-b50df",
+            storageBucket: "estoque-b50df.firebasestorage.app",
+            messagingSenderId: "634756791567",
+            appId: "1:634756791567:web:993e61243b57b7e057d27a"
+        };
+
+        const app = initializeApp(fC);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let masterDbUid = null;
+
+        const getCol = (c) => {
+            const uid = masterDbUid || auth.currentUser?.uid || 'unknown_user';
+            return isCanvas ? collection(db, 'artifacts', appId, 'users', uid, c) : collection(db, 'users', uid, c);
+        };
+        const getDocRef = (c, i) => {
+            const uid = masterDbUid || auth.currentUser?.uid || 'unknown_user';
+            return isCanvas ? doc(db, 'artifacts', appId, 'users', uid, c, i) : doc(db, 'users', uid, c, i);
+        };
+
+        const DB = {
+            add: async (c, d) => { const r = await addDoc(getCol(c), d); await setDoc(r, { id: r.id }, { merge: true }); return r.id; },
+            update: async (c, d) => { if (d.id) await setDoc(getDocRef(c, d.id), d, { merge: true }); },
+            get: async (c, i) => { if (!i) return null; const s = await getDoc(getDocRef(c, i)); return s.exists() ? s.data() : null; },
+            getAll: async (c, constraints = []) => { const q = await getDocs(constraints.length ? query(getCol(c), ...constraints) : getCol(c)); return q.docs.map(x => x.data()); }
+        };
+
+        // Auth
+        if(isCanvas) {
+            const initAuth = async () => {
+                try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+                else await signInAnonymously(auth); } catch(e) { console.error("Canvas Auth Error:", e); }
+            }; initAuth();
+        }
+
+        addEvt('btn-login-google','click',()=>{
+            const m=id('mensagem-erro'); if(m){m.innerText="Abrindo...";show(m);}
+            signInWithPopup(auth,provider).catch(()=>{if(m){m.innerHTML="Erro de Login";show(m);}});
+        });
+        addEvt('btn-bypass-login','click',async()=>{
+            const m=id('mensagem-erro'); if(m){m.innerText="Entrando anonimamente...";show(m);}
+            try{await signInAnonymously(auth);}catch(e){if(m){m.innerHTML="Erro no login anônimo.";show(m);}}
+        });
+        const logout=()=>{signOut(auth).then(()=>window.showNotif('Sessão encerrada.')).catch(console.error);};
+        addEvt('btn-sair','click',logout);
+
+        let localProducts = [];
+        let localOps = [];
+        let localEntries = [];
+
+        onAuthStateChanged(auth, async u => {
+            if(u) {
+                hide(id('login-wrapper')); show(id('app-wrapper')); show(id('loading-overlay'));
+                try {
+                    let isMainAdmin = (u.email && u.email.toLowerCase() === 'estoque@imaccongelados.com.br') || u.uid === 'admin';
+                    let mainAdminUid = null;
+                    const pDoc = await getDoc(doc(db, 'global_settings', 'company_db'));
+                    if(pDoc.exists() && pDoc.data().masterUid) mainAdminUid = pDoc.data().masterUid;
+
+                    const userDoc = await getDoc(doc(db, 'global_users', u.email || u.uid));
+                    if(userDoc.exists()) {
+                        const uData = userDoc.data();
+                        masterDbUid = uData.masterDbUid || mainAdminUid || u.uid;
+                        if (isMainAdmin) masterDbUid = u.uid;
+                    } else {
+                        masterDbUid = u.uid;
+                        if (isMainAdmin) await setDoc(doc(db, 'global_settings', 'company_db'), { masterUid: u.uid }, {merge: true});
+                        await setDoc(doc(db, 'global_users', u.email || u.uid), { email: u.email || u.uid, role: 'admin', masterDbUid: masterDbUid });
+                    }
+                    if(id('nome-usuario')) id('nome-usuario').innerText = `Expedição`;
+                    
+                    await refreshData();
+                } catch(e) { window.showNotif('Erro de conexão.', true); console.error(e); }
+                hide(id('loading-overlay'));
+            } else {
+                show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
+            }
+        });
+
+        async function refreshData() {
+            try {
+                // Puxa inventário filtrando produto final
+                const allInv = await DB.getAll('inventory');
+                localProducts = allInv.filter(i => i.type === 'produto_final');
+                
+                // Puxa Ordens de Produção
+                localOps = await DB.getAll('productionOrders');
+                
+                // Puxa Entradas da Expedição
+                localEntries = await DB.getAll('expedition_entries');
+
+                renderDashboard();
+                renderOpsPendentes();
+                renderHistory();
+                renderConfig();
+            } catch (e) {
+                console.error("Erro refresh", e);
+            }
+        }
+
+        function getExpectedYield(productId, multiplier) {
+            const p = localProducts.find(x => x.id === productId);
+            if(!p) return 0;
+            const yieldPerOp = parseFloat(p.expYield) || 0; // Se nao configurado, 0
+            return yieldPerOp * multiplier;
+        }
+
+        function getUom(productId) {
+            const p = localProducts.find(x => x.id === productId);
+            return (p && p.expUoM) ? p.expUoM.toUpperCase() : 'UN';
+        }
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            const pendentes = localOps.filter(o => o.status === 'concluída' && o.expeditionStatus !== 'recebida' && localProducts.some(p => p.id === o.recipeId)).length;
+            
+            const hoje = new Date().toISOString().split('T')[0];
+            const recebidasHoje = localEntries.filter(e => e.date.startsWith(hoje));
+            
+            const divHoje = recebidasHoje.filter(e => Math.abs(e.divergence) > 0.001).length;
+
+            id('dash-pendentes').innerText = pendentes;
+            id('dash-recebidas').innerText = recebidasHoje.length;
+            id('dash-divergencias').innerText = divHoje;
+        }
+
+        // --- RECEBIMENTO ---
+        function renderOpsPendentes() {
+            const tbody = id('ops-pendentes-body');
+            const q = (id('search-ops').value || '').toLowerCase();
+            
+            // Só OPs de produtos finais (presentes em localProducts), concluidas pela produção e não recebidas
+            let ops = localOps.filter(o => o.status === 'concluída' && o.expeditionStatus !== 'recebida');
+            ops = ops.filter(o => localProducts.some(p => p.id === o.recipeId));
+
+            if(q) {
+                ops = ops.filter(o => (o.recipeName||'').toLowerCase().includes(q) || (o.id||'').toLowerCase().includes(q));
+            }
+
+            ops.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(ops.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma Ordem de Produção pendente de recebimento.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = ops.map(o => {
+                const dt = new Date(o.date).toLocaleDateString('pt-BR');
+                return `
+                    <tr class="base-tr">
+                        <td class="base-td font-mono text-xs text-ios-textMuted">${o.id ? o.id.substring(0,8) : '-'}</td>
+                        <td class="base-td font-bold text-white">${o.recipeName}</td>
+                        <td class="base-td text-center text-ios-blue">${o.multiplier}x</td>
+                        <td class="base-td text-center">${dt}</td>
+                        <td class="base-td text-center">
+                            <button class="bg-ios-blue text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-blue-600 transition-colors shadow-sm shadow-ios-blue/20" onclick="openReceiveModal('${o.id}')">
+                                <i class="fa-solid fa-dolly mr-1"></i> Receber
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        window.openReceiveModal = (opId) => {
+            const op = localOps.find(x => x.id === opId);
+            const prod = localProducts.find(x => x.id === op.recipeId);
+            if(!op || !prod) return;
+
+            if(!prod.expYield || !prod.expUoM) {
+                window.showNotif('Produto não configurado! Vá na aba Configuração primeiro.', true);
+                document.querySelector('.nav-btn[data-target="config"]').click();
+                return;
+            }
+
+            const expected = getExpectedYield(prod.id, op.multiplier);
+            const uom = getUom(prod.id);
+
+            id('recv-op-id').value = op.id;
+            id('recv-product-id').value = prod.id;
+            id('recv-product-name').innerText = prod.name;
+            id('recv-expected').value = expected.toFixed(2);
+            id('recv-actual').value = expected.toFixed(2); // sugere total
+            
+            document.querySelectorAll('.recv-unit').forEach(el => el.innerText = uom);
+            updateDivergence();
+
+            show(id('receive-modal'));
+        };
+
+        function updateDivergence() {
+            const exp = parseFloat(id('recv-expected').value) || 0;
+            const act = parseFloat(id('recv-actual').value) || 0;
+            const diff = act - exp;
+            const divEl = id('recv-divergence');
+            
+            divEl.innerText = (diff > 0 ? '+' : '') + diff.toFixed(2);
+            divEl.className = `font-bold text-xl ${diff > 0.001 ? 'text-ios-green' : (diff < -0.001 ? 'text-ios-red' : 'text-ios-textMuted')}`;
+        }
+        addEvt('recv-actual', 'input', updateDivergence);
+
+        addEvt('receive-form', 'submit', async e => {
+            e.preventDefault();
+            const opId = id('recv-op-id').value;
+            const pId = id('recv-product-id').value;
+            const exp = parseFloat(id('recv-expected').value) || 0;
+            const act = parseFloat(id('recv-actual').value);
+            if(isNaN(act)) return;
+
+            const op = localOps.find(x => x.id === opId);
+            if(!op) return;
+
+            show(id('loading-overlay'));
+            try {
+                // 1. Gravar Entrada
+                const entry = {
+                    opId: op.id,
+                    productId: pId,
+                    productName: id('recv-product-name').innerText,
+                    date: new Date().toISOString(),
+                    expectedQty: exp,
+                    actualQty: act,
+                    divergence: act - exp,
+                    uom: id('recv-expected').nextElementSibling.innerText
+                };
+                await DB.add('expedition_entries', entry);
+
+                // 2. Atualizar OP para recebida
+                op.expeditionStatus = 'recebida';
+                await DB.update('productionOrders', op);
+
+                hide(id('receive-modal'));
+                window.showNotif('Entrada Registrada com Sucesso!');
+                await refreshData();
+            } catch(err) {
+                console.error(err);
+                window.showNotif('Erro ao salvar entrada', true);
+            }
+            hide(id('loading-overlay'));
+        });
+
+        addEvt('search-ops', 'input', renderOpsPendentes);
+
+        // --- HISTÓRICO ---
+        function renderHistory() {
+            const tbody = id('history-body');
+            let entries = [...localEntries].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-ios-textMuted">Nenhuma entrada registrada.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = entries.map(e => {
+                const dt = new Date(e.date).toLocaleString('pt-BR');
+                const diff = e.divergence || 0;
+                let diffHtml = `<span class="text-ios-textMuted">OK</span>`;
+                if(diff > 0.001) diffHtml = `<span class="text-ios-green font-bold">+${diff.toFixed(2)}</span>`;
+                else if(diff < -0.001) diffHtml = `<span class="text-ios-red font-bold">${diff.toFixed(2)}</span>`;
+
+                return `
+                    <tr class="base-tr">
+                        <td class="base-td text-xs text-ios-textMuted">${dt}</td>
+                        <td class="base-td font-bold text-white">${e.productName}</td>
+                        <td class="base-td text-right font-mono text-ios-textMuted">${e.expectedQty.toFixed(2)} ${e.uom}</td>
+                        <td class="base-td text-right font-mono font-bold text-ios-blue">${e.actualQty.toFixed(2)} ${e.uom}</td>
+                        <td class="base-td text-center">${diffHtml}</td>
+                        <td class="base-td text-center font-mono text-[10px] text-ios-textMuted">${e.opId.substring(0,8)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- CONFIGURAÇÃO ---
+        function renderConfig() {
+            const tbody = id('config-body');
+            const q = (id('search-config').value || '').toLowerCase();
+            
+            let list = localProducts;
+            if(q) list = list.filter(p => (p.name||'').toLowerCase().includes(q));
+
+            if(list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-ios-textMuted">Nenhum produto final encontrado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(p => {
+                const uom = p.expUoM || 'un';
+                const y = p.expYield || '';
+                return `
+                    <tr class="base-tr">
+                        <td class="base-td font-bold text-white w-1/2">${p.name}</td>
+                        <td class="base-td w-1/4">
+                            <select class="form-input py-2 text-sm bg-ios-bg config-uom" data-id="${p.id}">
+                                <option value="un" ${uom === 'un' ? 'selected' : ''}>Unidade (UN)</option>
+                                <option value="kg" ${uom === 'kg' ? 'selected' : ''}>Peso (KG)</option>
+                            </select>
+                        </td>
+                        <td class="base-td w-1/4">
+                            <div class="flex gap-2">
+                                <input type="number" step="0.001" min="0" class="form-input py-2 text-sm bg-ios-bg config-yield font-mono" data-id="${p.id}" value="${y}" placeholder="Ex: 50">
+                                <button class="btn-primary py-2 px-3 shrink-0 rounded-lg" onclick="saveConfig('${p.id}')"><i class="fa-solid fa-save"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        addEvt('search-config', 'input', renderConfig);
+
+        window.saveConfig = async (idProd) => {
+            const tr = document.querySelector(`.config-uom[data-id="${idProd}"]`).closest('tr');
+            const uom = tr.querySelector('.config-uom').value;
+            const yieldVal = parseFloat(tr.querySelector('.config-yield').value);
+            
+            if(isNaN(yieldVal) || yieldVal <= 0) return window.showNotif('Informe um rendimento válido!', true);
+
+            const p = localProducts.find(x => x.id === idProd);
+            if(!p) return;
+
+            show(id('loading-overlay'));
+            try {
+                p.expUoM = uom;
+                p.expYield = yieldVal;
+                await DB.update('inventory', p);
+                window.showNotif('Configuração Salva!');
+            } catch(e) {
+                console.error(e);
+                window.showNotif('Erro ao salvar.', true);
+            }
+            hide(id('loading-overlay'));
+        };
+
+    </script>
+</body>
+</html>
