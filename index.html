@@ -109,8 +109,11 @@
             <div id="screen-receive" class="screen-panel hidden">
                 <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-dolly text-ios-green mr-3"></i>Entrada de OPs (Estoque -> Expedição)</h1>
                 <div class="card mb-6">
-                    <p class="text-sm text-ios-textMuted mb-4">Abaixo estão as Ordens de Produção (dos últimos 7 dias) marcadas como "Concluídas" pela produção que ainda não deram entrada na expedição.</p>
-                    <div class="flex gap-2 mb-4"><input type="text" id="search-ops" class="form-input" placeholder="Buscar OP ou Produto..."></div>
+                    <p class="text-sm text-ios-textMuted mb-4">Selecione uma data para filtrar as OPs concluídas.</p>
+                    <div class="flex gap-2 mb-4">
+                        <input type="date" id="ops-date-filter" class="form-input w-48 text-sm py-1.5" onchange="renderOpsPendentes()">
+                        <input type="text" id="search-ops" class="form-input w-full" placeholder="Buscar OP ou Produto...">
+                    </div>
                     <div class="table-container max-h-[600px] overflow-y-auto">
                         <table class="base-table">
                             <thead class="base-thead">
@@ -325,7 +328,10 @@
                     }
                     if(id('nome-usuario')) id('nome-usuario').innerText = `Expedição`;
                     
-                    id('hist-date-filter').value = new Date().toISOString().split('T')[0];
+                    const today = new Date().toISOString().split('T')[0];
+                    id('hist-date-filter').value = today;
+                    if(id('ops-date-filter')) id('ops-date-filter').value = today;
+                    
                     await refreshData(true);
                 } catch(e) { window.showNotif('Erro de conexão.', true); console.error(e); }
             } else {
@@ -344,27 +350,14 @@
                     localProducts = rDocs.docs.map(d => ({ id: d.id, ...d.data() }));
                 }
                 
-                // 2. ORDEM DE PRODUÇÃO (LIMITADO A 7 DIAS)
-                if(forceDb || localOps.length === 0) {
-                    const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    const startDt = sevenDaysAgo.toISOString().split('T')[0];
-                    
-                    // Puxa apenas os últimos 7 dias. O filtro de "concluída" e "produto_final" fazemos via JS para economizar a necessidade de indexação composta no Firestore.
-                    const recentOps = await DB.getAll('productionOrders', [where('date', '>=', startDt)]);
-                    
-                    // Filtrar no lado do cliente as concluídas que geram produto final
-                    localOps = recentOps.filter(o => o.status === 'concluída' && localProducts.some(p => p.id === o.recipeId));
-                }
+                // 2. ORDEM DE PRODUÇÃO (LIMITADO A 30 DIAS)
+                const limitStr = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+                const allOps = await DB.getAll('productionOrders', [where('date', '>=', limitStr)]);
+                localOps = allOps.filter(o => o.status === 'concluída' && localProducts.some(p => p.id === o.recipeId));
                 
-                // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 7 DIAS TAMBÉM)
-                if(forceDb || localEntries.length === 0) {
-                    const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    const startDt = sevenDaysAgo.toISOString(); // DataHora
-                    const recentEntries = await DB.getAll('expedition_entries', [where('date', '>=', startDt)]);
-                    localEntries = recentEntries;
-                }
+                // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS)
+                const allEntries = await DB.getAll('expedition_entries', [where('date', '>=', limitStr)]);
+                localEntries = allEntries;
 
                 renderDashboard();
                 renderOpsPendentes();
@@ -405,8 +398,13 @@
         function renderOpsPendentes() {
             const tbody = id('ops-pendentes-body');
             const q = (id('search-ops').value || '').toLowerCase();
+            const dtFilter = id('ops-date-filter') ? id('ops-date-filter').value : '';
             
             let ops = localOps.filter(o => o.expeditionStatus !== 'recebida');
+
+            if(dtFilter) {
+                ops = ops.filter(o => o.date && o.date.startsWith(dtFilter));
+            }
 
             if(q) {
                 ops = ops.filter(o => (o.recipeName||'').toLowerCase().includes(q) || (o.id||'').toLowerCase().includes(q));
@@ -415,7 +413,7 @@
             ops.sort((a,b) => new Date(b.date) - new Date(a.date));
 
             if(ops.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma OP pendente nos últimos 7 dias.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma OP pendente na data selecionada.</td></tr>`;
                 return;
             }
 
