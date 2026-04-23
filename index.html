@@ -201,10 +201,6 @@
                         <div class="card">
                             <h2 class="title-md mb-4 text-white">Nova Saída</h2>
                             <form id="outbound-form" class="space-y-4">
-                                <div>
-                                    <label class="form-label">Destino / Cliente / Rota</label>
-                                    <input type="text" id="out-dest" required class="form-input text-sm py-2" placeholder="Ex: Rota 1, Cliente X">
-                                </div>
                                 <div class="border-t border-ios-border pt-4">
                                     <div class="flex justify-between items-center mb-3">
                                         <h3 class="title-md text-sm text-ios-textMuted">Itens Expedidos</h3>
@@ -231,7 +227,6 @@
                                             <th class="base-th">Produto</th>
                                             <th class="base-th text-center">Lotes (PVPS)</th>
                                             <th class="base-th text-right">Qtd</th>
-                                            <th class="base-th">Destino</th>
                                         </tr>
                                     </thead>
                                     <tbody id="outbound-history-body" class="divide-y divide-ios-border/50"></tbody>
@@ -478,17 +473,22 @@
                     localProducts = rDocs.docs.map(d => ({ id: d.id, ...d.data() }));
                 }
                 
-                // 2. ORDEM DE PRODUÇÃO (LIMITADO A 30 DIAS)
-                const limitStr = new Date(Date.now() - 30*24*60*60*1000).toISOString();
-                const allOps = await DB.getAll('productionOrders', [where('date', '>=', limitStr)]);
+                // LIMITES DE DATA OTIMIZADOS PARA ECONOMIZAR LEITURAS (READS)
+                const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+                const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+                const limit7Str = new Date(Date.now() - sevenDaysMs).toISOString();
+                const limit30Str = new Date(Date.now() - thirtyDaysMs).toISOString();
+
+                // 2. ORDEM DE PRODUÇÃO (LIMITADO A 7 DIAS - Só pendentes recentes)
+                const allOps = await DB.getAll('productionOrders', [where('date', '>=', limit7Str)]);
                 localOps = allOps.filter(o => o.status === 'concluída' && localProducts.some(p => p.id === o.recipeId));
                 
-                // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS)
-                const allEntries = await DB.getAll('expedition_entries', [where('date', '>=', limitStr)]);
+                // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 7 DIAS - Histórico curto)
+                const allEntries = await DB.getAll('expedition_entries', [where('date', '>=', limit7Str)]);
                 localEntries = allEntries;
                 
-                // 4. SAÍDAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS)
-                const allOut = await DB.getAll('expedition_outbound', [where('date', '>=', limitStr)]);
+                // 4. SAÍDAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS - Para cálculo da Média)
+                const allOut = await DB.getAll('expedition_outbound', [where('date', '>=', limit30Str)]);
                 localOutbound = allOut;
 
                 // 5. LOTES DA EXPEDIÇÃO (Ativos)
@@ -799,26 +799,65 @@
         });
 
         // ================= OUTBOUND (SAÍDAS PVPS) =================
-        function buildOutboundOptions() {
-            return '<option value="">Selecione...</option>' + localProducts.map(p => `<option value="${p.id}">${p.name} (${p.expUoM || 'un'})</option>`).join('');
+        function createSearchableSelect(container, data, placeholder) {
+            container.innerHTML = `
+                <div class="relative w-full">
+                    <input type="text" class="form-input text-xs py-1.5 search-input" placeholder="${placeholder}" required>
+                    <input type="hidden" class="req-out-prod">
+                    <ul class="absolute z-50 w-full bg-ios-card border border-ios-border rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-xl search-dropdown"></ul>
+                </div>
+            `;
+            const input = container.querySelector('.search-input');
+            const hidden = container.querySelector('.req-out-prod');
+            const dropdown = container.querySelector('.search-dropdown');
+            
+            const renderList = (q) => {
+                const term = q.toLowerCase();
+                const filtered = data.filter(d => (d.name||'').toLowerCase().includes(term));
+                dropdown.innerHTML = filtered.map(d => `<li class="px-3 py-2 text-xs text-white hover:bg-ios-blue hover:text-white cursor-pointer" data-id="${d.id}">${d.name}</li>`).join('');
+                if(!filtered.length) dropdown.innerHTML = `<li class="px-3 py-2 text-xs text-ios-textMuted">Nenhum encontrado</li>`;
+            };
+            
+            input.addEventListener('focus', () => { renderList(input.value); show(dropdown); });
+            input.addEventListener('input', e => { renderList(e.target.value); hidden.value = ''; });
+            
+            dropdown.addEventListener('mousedown', e => {
+                if(e.target.tagName === 'LI' && e.target.dataset.id) {
+                    input.value = e.target.innerText;
+                    hidden.value = e.target.dataset.id;
+                    hide(dropdown);
+                }
+            });
+            input.addEventListener('blur', () => hide(dropdown));
         }
 
         addEvt('add-outbound-item-btn', 'click', () => {
             const container = id('outbound-items-container');
             const row = document.createElement('div');
             row.className = 'flex items-end gap-2 bg-ios-bg p-2 rounded-lg border border-ios-border';
-            row.innerHTML = `
-                <div class="flex-1">
-                    <label class="form-label text-[10px]">Produto</label>
-                    <select class="form-input text-xs py-1.5 req-out-prod" required>${buildOutboundOptions()}</select>
-                </div>
-                <div class="w-24">
-                    <label class="form-label text-[10px]">Qtd</label>
-                    <input type="number" step="0.01" min="0.01" class="form-input text-xs py-1.5 font-bold text-ios-blue req-out-qty" required>
-                </div>
-                <button type="button" class="btn-secondary px-2 py-1.5 rounded-lg text-ios-red" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+            
+            const selContainer = document.createElement('div');
+            selContainer.className = 'flex-1';
+            
+            row.appendChild(selContainer);
+            
+            const qtyContainer = document.createElement('div');
+            qtyContainer.className = 'w-24';
+            qtyContainer.innerHTML = `
+                <input type="number" step="0.01" min="0.01" class="form-input text-xs py-1.5 font-bold text-ios-blue req-out-qty" placeholder="Qtd" required>
             `;
+            row.appendChild(qtyContainer);
+            
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn-secondary px-2 py-1.5 rounded-lg text-ios-red';
+            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            delBtn.onclick = () => row.remove();
+            row.appendChild(delBtn);
+
             container.appendChild(row);
+            
+            createSearchableSelect(selContainer, localProducts, 'Buscar Produto...');
         });
 
         window.renderOutboundHistory = () => {
@@ -843,7 +882,6 @@
                     <td class="base-td font-bold text-white">${e.productName}</td>
                     <td class="base-td text-center font-mono text-[10px] text-ios-orange">${consumedStr}</td>
                     <td class="base-td text-right font-mono font-bold text-ios-orange">${e.qty.toFixed(2)} <span class="text-[9px]">${e.uom || ''}</span></td>
-                    <td class="base-td text-ios-textMuted">${e.destination}</td>
                 </tr>
                 `;
             }).join('');
@@ -854,7 +892,6 @@
             const rows = document.querySelectorAll('#outbound-items-container > div');
             if(rows.length === 0) return window.showNotif('Adicione pelo menos um item', true);
 
-            const dest = id('out-dest').value.trim();
             const dateStr = new Date().toISOString();
 
             // Prepare items
@@ -905,7 +942,6 @@
                         productName: item.p.name,
                         qty: item.qty,
                         uom: item.p.expUoM || 'un',
-                        destination: dest,
                         date: dateStr,
                         consumedBatches: consumed
                     };
