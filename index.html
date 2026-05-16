@@ -53,7 +53,7 @@
             main { overflow: visible !important; height: auto !important; }
             #main-container { overflow: visible !important; height: auto !important; padding: 0 !important; }
             #view-inventario { display: block !important; }
-            #print-area { display: block !important; position: static !important; width: 100%; box-shadow: none !important; border: none !important; }
+            #print-area { display: block !important; position: static !important; width: 100%; box-shadow: none !important; border: none !important; margin-top: 0 !important;}
         }
     </style>
 </head>
@@ -138,7 +138,7 @@
                 <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
                 <div class="flex items-center space-x-4">
                     <span class="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-sm font-medium flex items-center border border-brand-200 shadow-sm">
-                        <i class="ph-fill ph-lightning mr-1"></i> Nuvem Sincronizada
+                        <i class="ph-fill ph-lightning mr-1"></i> Banco Universal
                     </span>
                 </div>
             </header>
@@ -277,7 +277,7 @@
                             </table>
                         </div>
                         <button id="btn-salvar-entradas" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar e Salvar Todas as Entradas no Banco
+                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar
                         </button>
                     </div>
                 </div>
@@ -334,7 +334,7 @@
                             </table>
                         </div>
                         <button id="btn-salvar-saidas" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-sign-out mr-2 text-xl"></i> Processar e Salvar Todas as Saídas
+                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar
                         </button>
                     </div>
                 </div>
@@ -390,30 +390,49 @@
                         <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
                             <i class="ph ph-clipboard-text text-brand-500 mr-2 text-xl"></i> Gerar Ficha de Inventário Cíclico
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
+                        
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div class="flex-1">
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Filtrar por Setor</label>
-                                <select id="inv-setor" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                <select id="inv-setor-filtro" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
                                     <option value="">Todos os Setores</option>
                                     <!-- JS preenche -->
                                 </select>
                             </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Buscar Item</label>
+                                <input type="text" id="inv-busca-filtro" placeholder="Nome do item..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                            </div>
                         </div>
+
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-gray-700">Selecione os itens para contar:</span>
+                            <div class="space-x-3 text-sm">
+                                <button type="button" onclick="window.selectAllInv()" class="text-brand-600 hover:text-brand-800 font-bold transition-colors">Marcar Visíveis</button>
+                                <button type="button" onclick="window.clearAllInv()" class="text-gray-500 hover:text-gray-700 transition-colors">Limpar Tudo</button>
+                            </div>
+                        </div>
+
+                        <!-- Container de Checkboxes (Itens Únicos) -->
+                        <div id="inv-items-container" class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2 mb-6 bg-gray-50">
+                            <!-- JS preenche -->
+                        </div>
+
                         <button onclick="window.gerarFichaInventario()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
                             <i class="ph ph-printer mr-2 text-xl"></i> Criar Relatório para Contagem
                         </button>
                     </div>
 
                     <!-- Print Area -->
-                    <div id="print-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                    <div id="print-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto mt-6">
                         <div class="flex justify-between items-center border-b-2 border-gray-800 pb-4 mb-6">
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-900 uppercase tracking-tight">Ficha de Inventário Cíclico</h2>
-                                <p class="text-gray-600 mt-1" id="inv-print-meta">Setor: Todos | Data: --</p>
+                                <p class="text-gray-600 mt-1" id="inv-print-meta">Data: --</p>
                             </div>
-                            <div class="text-right text-sm">
-                                <p class="mb-2">Auditor: ___________________________</p>
-                                <p>Assinatura: ___________________________</p>
+                            <div>
+                                <!-- Substitua "logo.png" pelo nome correto da sua imagem upada no Github se for diferente -->
+                                <img src="logo.png" alt="IMAC Logo" class="h-14 object-contain">
                             </div>
                         </div>
                         <table class="w-full text-left border-collapse text-sm mb-6">
@@ -571,6 +590,8 @@
         let edicoes = []; 
         let listaEntradaTemporaria = [];
         let listaSaidaTemporaria = [];
+        let selectedInvItems = new Set(); // Controle dos checkboxes do inventário
+        
         let unsubEstoque = null;
         let unsubMovimentos = null;
         let unsubEdicoes = null;
@@ -665,7 +686,7 @@
             if (document.getElementById('view-dashboard').classList.contains('block')) updateDashboard();
             if (document.getElementById('view-estoque').classList.contains('block')) renderTabelaEstoque();
             if (document.getElementById('view-saida').classList.contains('block')) revalidarSaldoSaida();
-            if (document.getElementById('view-inventario').classList.contains('block')) window.gerarFichaInventario(true);
+            if (document.getElementById('view-inventario').classList.contains('block')) window.renderInventarioLista();
             
             if (!document.getElementById('modal-item').classList.contains('hidden') && itemAtualModal) {
                 renderModalLotes();
@@ -713,15 +734,16 @@
             datalist.innerHTML = itensUnicos.map(nome => `<option value="${nome}">`).join('');
 
             const datalistSetor = document.getElementById('setores-list');
-            const selectInvSetor = document.getElementById('inv-setor');
+            const selectInvSetor = document.getElementById('inv-setor-filtro');
             const setoresUnicos = [...new Set(estoque.map(item => item.setor || 'N/A'))].filter(s => s !== 'N/A');
             
             datalistSetor.innerHTML = setoresUnicos.map(s => `<option value="${s}">`).join('');
             
-            // Preserva seleção do select de inventário se houver
-            const currentSelected = selectInvSetor.value;
-            selectInvSetor.innerHTML = '<option value="">Todos os Setores</option>' + setoresUnicos.map(s => `<option value="${s}">${s}</option>`).join('');
-            if (setoresUnicos.includes(currentSelected)) selectInvSetor.value = currentSelected;
+            if (selectInvSetor) {
+                const currentSelected = selectInvSetor.value;
+                selectInvSetor.innerHTML = '<option value="">Todos os Setores</option>' + setoresUnicos.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (setoresUnicos.includes(currentSelected)) selectInvSetor.value = currentSelected;
+            }
         }
 
         function getMediaSaida30d(nomeItem = null) {
@@ -833,7 +855,7 @@
             if(listaEntradaTemporaria.length === 0) return;
             const btn = document.getElementById('btn-salvar-entradas');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Salvando no Sistema...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Confirmando...';
             btn.disabled = true;
 
             try {
@@ -953,7 +975,7 @@
             if(listaSaidaTemporaria.length === 0) return;
             const btn = document.getElementById('btn-salvar-saidas');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Processando Baixas...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Confirmando...';
             btn.disabled = true;
 
             try {
@@ -1090,11 +1112,8 @@
             const tbody = document.getElementById('modal-lotes-tbody');
             tbody.innerHTML = '';
 
-            let lotesItem = estoque.filter(l => l.nome === itemAtualModal); // Incluindo todos que foram dados entrada, filtraremos qtd=0
-            
-            // Para lotes específicos, só vamos mostrar no modal de gerenciamento se tiver algo nele ou se for recém adicionado? 
-            // Vamos filtrar > 0 pra manter limpo, já que histórico de saída fica nas edições ou em relatórios.
-            lotesItem = lotesItem.filter(l => l.qtd > 0);
+            let lotesItem = estoque.filter(l => l.nome === itemAtualModal); 
+            lotesItem = lotesItem.filter(l => l.qtd > 0); // Ocultar zerados no modal para não poluir
             lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
 
             if (lotesItem.length === 0) {
@@ -1242,20 +1261,82 @@
         }
 
         // --- INVENTÁRIO CÍCLICO ---
-        window.gerarFichaInventario = function(onlyUpdateSelect = false) {
-            if (onlyUpdateSelect) return; // called by atualizarUI just to refresh visual layout if needed
-            
-            const setorFiltro = document.getElementById('inv-setor').value;
+        window.renderInventarioLista = function() {
+            if (!document.getElementById('view-inventario').classList.contains('block')) return;
+
+            const setorFiltro = document.getElementById('inv-setor-filtro').value;
+            const buscaFiltro = document.getElementById('inv-busca-filtro').value.trim().toUpperCase();
+            const container = document.getElementById('inv-items-container');
+
+            // Pegar apenas itens únicos
+            const mapItens = new Map();
+            estoque.forEach(l => {
+                if (!mapItens.has(l.nome)) {
+                    mapItens.set(l.nome, { nome: l.nome, setor: l.setor || 'N/A' });
+                }
+            });
+            let itens = Array.from(mapItens.values());
+
+            itens.sort((a,b) => a.nome.localeCompare(b.nome));
+
+            // Aplica filtros visuais
+            if (setorFiltro) itens = itens.filter(i => i.setor === setorFiltro);
+            if (buscaFiltro) itens = itens.filter(i => i.nome.includes(buscaFiltro));
+
+            container.innerHTML = '';
+            if (itens.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Nenhum item encontrado.</p>';
+                return;
+            }
+
+            itens.forEach(i => {
+                const isChecked = selectedInvItems.has(i.nome) ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer transition-colors border border-transparent hover:border-gray-200">
+                        <input type="checkbox" value="${i.nome}" class="inv-checkbox w-4 h-4 text-brand-600 rounded focus:ring-brand-500" ${isChecked} onchange="window.toggleInvItem(this)">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-800">${i.nome}</span>
+                            <span class="text-[10px] font-medium text-gray-500 uppercase">${i.setor}</span>
+                        </div>
+                    </label>
+                `;
+            });
+        }
+
+        window.toggleInvItem = function(checkbox) {
+            if (checkbox.checked) selectedInvItems.add(checkbox.value);
+            else selectedInvItems.delete(checkbox.value);
+        }
+
+        window.selectAllInv = function() {
+            document.querySelectorAll('.inv-checkbox').forEach(cb => {
+                cb.checked = true;
+                selectedInvItems.add(cb.value);
+            });
+        }
+
+        window.clearAllInv = function() {
+            selectedInvItems.clear();
+            window.renderInventarioLista();
+        }
+
+        // Listeners para busca do inventário
+        document.getElementById('inv-setor-filtro')?.addEventListener('change', window.renderInventarioLista);
+        document.getElementById('inv-busca-filtro')?.addEventListener('input', window.renderInventarioLista);
+
+        window.gerarFichaInventario = function() {
             const printArea = document.getElementById('print-area');
             const tbody = document.getElementById('inv-print-tbody');
             const meta = document.getElementById('inv-print-meta');
             
+            if (selectedInvItems.size === 0) {
+                window.showToast('Selecione pelo menos um item usando as caixinhas para gerar a ficha.', 'error');
+                return;
+            }
+
             tbody.innerHTML = '';
             
-            let itemsParaContar = estoque.filter(l => l.qtd > 0); // Só lotes que tem saldo no sistema para verificação física
-            if (setorFiltro) {
-                itemsParaContar = itemsParaContar.filter(i => (i.setor || 'N/A') === setorFiltro);
-            }
+            let itemsParaContar = estoque.filter(l => selectedInvItems.has(l.nome)); 
             
             // Ordenar por Setor -> Nome -> Validade
             itemsParaContar.sort((a, b) => {
@@ -1264,19 +1345,14 @@
                 if (a.nome !== b.nome) return a.nome.localeCompare(b.nome);
                 return new Date(a.validade) - new Date(b.validade);
             });
-
-            if(itemsParaContar.length === 0) {
-                window.showToast('Nenhum item com saldo encontrado neste setor.', 'error');
-                return;
-            }
             
             itemsParaContar.forEach(item => {
-                const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                const valStr = item.validade ? new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-300">
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-600 text-xs uppercase">${item.setor || '-'}</td>
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-900 font-medium text-sm">${item.nome}</td>
-                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-xs text-center font-bold">${item.lote}</td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-xs text-center font-bold">${item.lote || '-'}</td>
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-600 text-xs text-center">${valStr}</td>
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-right font-bold">${Number(item.qtd).toFixed(2)} <span class="text-[10px] font-normal text-gray-500">${item.und}</span></td>
                         <td class="py-2 px-3 text-center text-gray-400">_________________</td>
@@ -1284,8 +1360,11 @@
                 `;
             });
             
-            meta.innerText = `Setor: ${setorFiltro || 'TODOS OS SETORES'} | Data de Impressão: ${new Date().toLocaleDateString('pt-BR')}`;
+            meta.innerText = `Itens Selecionados: ${selectedInvItems.size} | Data de Impressão: ${new Date().toLocaleDateString('pt-BR')}`;
             printArea.classList.remove('hidden');
+            
+            // Scroll para área de impressão
+            printArea.scrollIntoView({ behavior: 'smooth' });
         }
 
     </script>
