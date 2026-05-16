@@ -45,6 +45,16 @@
 
         /* Modals */
         .modal-overlay { backdrop-filter: blur(4px); }
+
+        /* Estilos de Impressão para o Inventário Cíclico */
+        @media print {
+            body { background-color: white !important; }
+            aside, header, #toast, .modal-overlay, .no-print { display: none !important; }
+            main { overflow: visible !important; height: auto !important; }
+            #main-container { overflow: visible !important; height: auto !important; padding: 0 !important; }
+            #view-inventario { display: block !important; }
+            #print-area { display: block !important; position: static !important; width: 100%; box-shadow: none !important; border: none !important; }
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800 font-sans">
@@ -80,13 +90,13 @@
     <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden">
         
         <!-- Sidebar -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-10">
+        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-10 shrink-0">
             <div class="h-16 flex items-center px-6 border-b border-gray-100">
                 <i class="ph-fill ph-package text-brand-500 text-2xl mr-2"></i>
                 <h1 class="text-lg font-bold text-gray-900">Expedição PRO</h1>
             </div>
             
-            <nav class="flex-1 py-4 space-y-1">
+            <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
                 <button onclick="window.navigate('dashboard')" id="nav-dashboard" class="sidebar-active w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                     <i class="ph ph-squares-four text-lg mr-3"></i> Painel Inicial
                 </button>
@@ -98,6 +108,9 @@
                 </button>
                 <button onclick="window.navigate('estoque')" id="nav-estoque" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                     <i class="ph ph-stack text-lg mr-3"></i> Estoque
+                </button>
+                <button onclick="window.navigate('inventario')" id="nav-inventario" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="ph ph-clipboard-text text-lg mr-3"></i> Inventário Cíclico
                 </button>
             </nav>
 
@@ -133,8 +146,9 @@
             <!-- Content Area -->
             <div class="flex-1 overflow-y-auto p-8" id="main-container">
                 
-                <!-- Datalist para Autocomplete -->
+                <!-- Datalists para Autocomplete -->
                 <datalist id="estoque-itens-list"></datalist>
+                <datalist id="setores-list"></datalist>
 
                 <!-- VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="space-y-6 block">
@@ -191,10 +205,14 @@
                             <i class="ph ph-plus-circle text-brand-500 mr-2 text-xl"></i> Adicionar Itens à Entrada
                         </h3>
                         <form id="form-entrada-item" class="space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nome do Item</label>
-                                    <input list="estoque-itens-list" id="ent-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Digite ou selecione um item...">
+                                    <input list="estoque-itens-list" id="ent-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Digite ou selecione...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Setor</label>
+                                    <input list="setores-list" id="ent-setor" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Ex: Câmara Fria 1">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Data de Entrada</label>
@@ -205,7 +223,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lote</label>
-                                    <input type="text" id="ent-lote" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Lote do fabricante">
+                                    <input type="text" id="ent-lote" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Nº Lote">
                                 </div>
                                 <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
@@ -247,6 +265,7 @@
                                 <thead>
                                     <tr class="text-gray-500 border-b">
                                         <th class="py-2">Item</th>
+                                        <th class="py-2">Setor</th>
                                         <th class="py-2">Lote</th>
                                         <th class="py-2">Validade</th>
                                         <th class="py-2 text-center">Status</th>
@@ -258,7 +277,7 @@
                             </table>
                         </div>
                         <button id="btn-salvar-entradas" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-check-circle mr-2 text-xl"></i> Salvar Todas as Entradas no Banco
+                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar e Salvar Todas as Entradas no Banco
                         </button>
                     </div>
                 </div>
@@ -287,6 +306,9 @@
                                     <input type="number" step="0.01" id="sai-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
                                 </div>
                             </div>
+                            
+                            <!-- Box de Preview de Lotes -->
+                            <div id="sai-preview-box" class="min-h-[20px]"></div>
 
                             <div class="pt-2 text-right">
                                 <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center">
@@ -312,7 +334,7 @@
                             </table>
                         </div>
                         <button id="btn-salvar-saidas" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-sign-out mr-2 text-xl"></i> Processar Todas as Saídas
+                            <i class="ph ph-sign-out mr-2 text-xl"></i> Processar e Salvar Todas as Saídas
                         </button>
                     </div>
                 </div>
@@ -349,7 +371,7 @@
                                 <thead class="sticky top-0 bg-white z-10 shadow-sm">
                                     <tr class="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
                                         <th class="p-4 font-bold">Item</th>
-                                        <th class="p-4 font-bold">Avisos</th>
+                                        <th class="p-4 font-bold">Avisos / Status</th>
                                         <th class="p-4 font-bold text-right">Saldo Total</th>
                                         <th class="p-4 w-10 text-center">Detalhes</th>
                                     </tr>
@@ -362,13 +384,71 @@
                     </div>
                 </div>
 
+                <!-- VIEW: INVENTÁRIO CÍCLICO -->
+                <div id="view-inventario" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto no-print">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="ph ph-clipboard-text text-brand-500 mr-2 text-xl"></i> Gerar Ficha de Inventário Cíclico
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Filtrar por Setor</label>
+                                <select id="inv-setor" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                    <option value="">Todos os Setores</option>
+                                    <!-- JS preenche -->
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="window.gerarFichaInventario()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                            <i class="ph ph-printer mr-2 text-xl"></i> Criar Relatório para Contagem
+                        </button>
+                    </div>
+
+                    <!-- Print Area -->
+                    <div id="print-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                        <div class="flex justify-between items-center border-b-2 border-gray-800 pb-4 mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 uppercase tracking-tight">Ficha de Inventário Cíclico</h2>
+                                <p class="text-gray-600 mt-1" id="inv-print-meta">Setor: Todos | Data: --</p>
+                            </div>
+                            <div class="text-right text-sm">
+                                <p class="mb-2">Auditor: ___________________________</p>
+                                <p>Assinatura: ___________________________</p>
+                            </div>
+                        </div>
+                        <table class="w-full text-left border-collapse text-sm mb-6">
+                            <thead>
+                                <tr class="bg-gray-100 border-y border-gray-300 text-xs uppercase">
+                                    <th class="py-2 px-3 font-bold border-r border-gray-300">Setor</th>
+                                    <th class="py-2 px-3 font-bold border-r border-gray-300">Item</th>
+                                    <th class="py-2 px-3 font-bold border-r border-gray-300 text-center">Lote</th>
+                                    <th class="py-2 px-3 font-bold border-r border-gray-300 text-center">Validade</th>
+                                    <th class="py-2 px-3 font-bold border-r border-gray-300 text-right">Sistema</th>
+                                    <th class="py-2 px-3 font-bold w-32 text-center">Contagem Física</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inv-print-tbody" class="divide-y divide-gray-300">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                        <div class="text-center no-print">
+                            <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-8 rounded-lg transition-colors inline-flex items-center shadow-lg">
+                                <i class="ph ph-printer mr-2 text-xl"></i> Imprimir Ficha Agora
+                            </button>
+                            <button onclick="document.getElementById('print-area').classList.add('hidden')" class="ml-4 text-gray-500 hover:text-gray-800 font-medium">
+                                Fechar Prévia
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
     <!-- MODAL: DETALHES DO ITEM -->
     <div id="modal-item" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="modal-overlay absolute inset-0 bg-gray-900/40" onclick="fecharModalItem()"></div>
+        <div class="modal-overlay absolute inset-0 bg-gray-900/40" onclick="window.fecharModalItem()"></div>
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col relative z-10 overflow-hidden border border-gray-100">
             
             <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
@@ -377,27 +457,28 @@
                     <p class="text-sm text-gray-500 mt-1">Média de Saída (30 dias): <strong id="modal-item-media" class="text-brand-600">0.00 und/dia</strong></p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="abrirModalEdicoes()" class="flex items-center text-sm bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium">
+                    <button onclick="window.abrirModalEdicoes()" class="flex items-center text-sm bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium">
                         <i class="ph ph-clock-counter-clockwise mr-2 text-lg"></i> Histórico de Edições
                     </button>
-                    <button onclick="fecharModalItem()" class="text-gray-400 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition-colors">
+                    <button onclick="window.fecharModalItem()" class="text-gray-400 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition-colors">
                         <i class="ph ph-x text-lg"></i>
                     </button>
                 </div>
             </div>
 
             <div class="p-6 overflow-y-auto flex-1 bg-white">
-                <h3 class="font-bold text-gray-800 mb-4">Lotes Disponíveis</h3>
+                <h3 class="font-bold text-gray-800 mb-4">Lotes Disponíveis / Registrados</h3>
                 <div class="overflow-x-auto border border-gray-100 rounded-lg">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead class="bg-gray-50">
                             <tr class="text-gray-500 border-b border-gray-100">
                                 <th class="py-3 px-4 font-semibold">Lote</th>
+                                <th class="py-3 px-4 font-semibold">Setor</th>
                                 <th class="py-3 px-4 font-semibold">Entrada</th>
                                 <th class="py-3 px-4 font-semibold">Validade</th>
                                 <th class="py-3 px-4 font-semibold">Status</th>
                                 <th class="py-3 px-4 text-right font-semibold">Qtd</th>
-                                <th class="py-3 px-4 text-center font-semibold w-24">Ações</th>
+                                <th class="py-3 px-4 text-center font-semibold w-28">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="modal-lotes-tbody" class="divide-y divide-gray-100">
@@ -415,7 +496,7 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-gray-100">
             <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-pencil-simple text-brand-500 mr-2 text-lg"></i> Editar Lote</h3>
-                <button onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
+                <button onclick="window.fecharModalEdicao()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
             </div>
             <form id="form-edicao-lote" class="p-5 space-y-4">
                 <input type="hidden" id="edit-lote-id">
@@ -435,7 +516,7 @@
                     </div>
                 </div>
                 <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="fecharModalEdicao()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition-colors">Cancelar</button>
+                    <button type="button" onclick="window.fecharModalEdicao()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition-colors">Cancelar</button>
                     <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-lg transition-colors">Salvar Alteração</button>
                 </div>
             </form>
@@ -444,11 +525,11 @@
 
     <!-- MODAL: HISTÓRICO DE EDIÇÕES -->
     <div id="modal-historico" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div class="modal-overlay absolute inset-0 bg-gray-900/60" onclick="fecharModalHistorico()"></div>
+        <div class="modal-overlay absolute inset-0 bg-gray-900/60" onclick="window.fecharModalHistorico()"></div>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col relative z-10 overflow-hidden border border-gray-100">
             <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
                 <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-clock-counter-clockwise text-brand-500 mr-2 text-lg"></i> Registro de Alterações: <span id="hist-item-nome" class="ml-1 text-gray-600"></span></h3>
-                <button onclick="fecharModalHistorico()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
+                <button onclick="window.fecharModalHistorico()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
             </div>
             <div class="p-5 overflow-y-auto flex-1">
                 <ul id="lista-historico" class="space-y-4 text-sm">
@@ -487,23 +568,40 @@
         let usuarioAtual = null;
         let estoque = [];
         let movimentos = [];
-        let edicoes = []; // Novo controle de histórico
+        let edicoes = []; 
         let listaEntradaTemporaria = [];
         let listaSaidaTemporaria = [];
         let unsubEstoque = null;
         let unsubMovimentos = null;
         let unsubEdicoes = null;
-
-        let itemAtualModal = ''; // Guarda qual item está aberto no modal
+        let itemAtualModal = ''; 
 
         document.getElementById('ent-data').valueAsDate = new Date();
 
+        // Expôe o toast globalmente para chamadas HTML
+        window.showToast = function(message, type) {
+            const toast = document.getElementById('toast');
+            const iconContainer = document.getElementById('toast-icon');
+            const msgContainer = document.getElementById('toast-msg');
+
+            msgContainer.innerText = message;
+            if (type === 'success') {
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg';
+                iconContainer.innerHTML = '<i class="ph ph-check text-xl"></i>';
+            } else {
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg';
+                iconContainer.innerHTML = '<i class="ph ph-warning text-xl"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
+        };
+
         // --- CONTROLE DE AUTENTICAÇÃO ---
         const provider = new GoogleAuthProvider();
-        
         document.getElementById('btn-login').addEventListener('click', async () => {
             try { await signInWithPopup(auth, provider); } 
-            catch (error) { showToast('Erro ao fazer login: ' + error.message, 'error'); }
+            catch (error) { window.showToast('Erro ao fazer login: ' + error.message, 'error'); }
         });
 
         document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
@@ -529,7 +627,7 @@
                 }
 
                 iniciarListenersBanco();
-                navigate('dashboard');
+                window.navigate('dashboard');
             } else {
                 usuarioAtual = null;
                 loginView.classList.remove('hidden');
@@ -547,7 +645,7 @@
                 estoque = [];
                 snapshot.forEach(doc => { estoque.push({ id: doc.id, ...doc.data() }); });
                 atualizarUI();
-            }, (error) => { showToast('Erro ao ler estoque.', 'error'); });
+            }, (error) => { window.showToast('Erro ao ler estoque.', 'error'); });
 
             unsubMovimentos = onSnapshot(collection(db, 'movimentos'), (snapshot) => {
                 movimentos = [];
@@ -558,7 +656,6 @@
             unsubEdicoes = onSnapshot(collection(db, 'edicoes'), (snapshot) => {
                 edicoes = [];
                 snapshot.forEach(doc => { edicoes.push({ id: doc.id, ...doc.data() }); });
-                // Ordenar por data mais recente
                 edicoes.sort((a,b) => new Date(b.data) - new Date(a.data));
             }, (error) => { console.error("Erro edicoes:", error); });
         }
@@ -568,16 +665,16 @@
             if (document.getElementById('view-dashboard').classList.contains('block')) updateDashboard();
             if (document.getElementById('view-estoque').classList.contains('block')) renderTabelaEstoque();
             if (document.getElementById('view-saida').classList.contains('block')) revalidarSaldoSaida();
+            if (document.getElementById('view-inventario').classList.contains('block')) window.gerarFichaInventario(true);
             
-            // Se o modal de um item estiver aberto, atualiza ele em tempo real
             if (!document.getElementById('modal-item').classList.contains('hidden') && itemAtualModal) {
                 renderModalLotes();
             }
         }
 
         // --- NAVEGAÇÃO ---
-        const views = ['dashboard', 'entrada', 'saida', 'estoque'];
-        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Estoque' };
+        const views = ['dashboard', 'entrada', 'saida', 'estoque', 'inventario'];
+        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Estoque', 'inventario': 'Inventário Cíclico' };
 
         window.navigate = function(viewId) {
             views.forEach(v => {
@@ -614,6 +711,17 @@
             const datalist = document.getElementById('estoque-itens-list');
             const itensUnicos = [...new Set(estoque.map(item => item.nome))];
             datalist.innerHTML = itensUnicos.map(nome => `<option value="${nome}">`).join('');
+
+            const datalistSetor = document.getElementById('setores-list');
+            const selectInvSetor = document.getElementById('inv-setor');
+            const setoresUnicos = [...new Set(estoque.map(item => item.setor || 'N/A'))].filter(s => s !== 'N/A');
+            
+            datalistSetor.innerHTML = setoresUnicos.map(s => `<option value="${s}">`).join('');
+            
+            // Preserva seleção do select de inventário se houver
+            const currentSelected = selectInvSetor.value;
+            selectInvSetor.innerHTML = '<option value="">Todos os Setores</option>' + setoresUnicos.map(s => `<option value="${s}">${s}</option>`).join('');
+            if (setoresUnicos.includes(currentSelected)) selectInvSetor.value = currentSelected;
         }
 
         function getMediaSaida30d(nomeItem = null) {
@@ -627,7 +735,7 @@
                 if (mov.tipo === 'SAIDA') {
                     const dataMov = new Date(mov.data);
                     if (dataMov >= limiteAtras) {
-                        if (nomeItem && mov.nome !== nomeItem) return; // Filtrar específico
+                        if (nomeItem && mov.nome !== nomeItem) return; 
                         if (!saidasPorItem[mov.nome]) saidasPorItem[mov.nome] = { qtd: 0, und: mov.und };
                         saidasPorItem[mov.nome].qtd += Number(mov.qtd);
                     }
@@ -684,23 +792,25 @@
             container.innerHTML = html;
         }
 
-        // --- ENTRADA E SAIDA LOGIC (Manteve Igual) ---
-        // Funções de formatação mantidas da versão original. 
-        // Apenas para compacidade, os listeners de formulário permanecem inalterados.
+        // --- ENTRADA MÚLTIPLA ---
         document.getElementById('form-entrada-item').addEventListener('submit', function(e) {
             e.preventDefault();
             const nome = document.getElementById('ent-nome').value.trim().toUpperCase();
+            const setor = document.getElementById('ent-setor').value.trim();
             const lote = document.getElementById('ent-lote').value.trim();
             const qtd = parseFloat(document.getElementById('ent-qtd').value);
             const isTeste = document.getElementById('ent-teste').checked;
             
             listaEntradaTemporaria.push({
-                nome, dataEntrada: document.getElementById('ent-data').value, lote, qtd,
+                nome, setor, dataEntrada: document.getElementById('ent-data').value, lote, qtd,
                 und: document.getElementById('ent-und').value, validade: document.getElementById('ent-validade').value, isTeste
             });
             renderListaEntrada();
-            document.getElementById('ent-lote').value = ''; document.getElementById('ent-qtd').value = '';
-            document.getElementById('ent-validade').value = ''; document.getElementById('ent-teste').checked = false;
+            
+            document.getElementById('ent-lote').value = ''; 
+            document.getElementById('ent-qtd').value = '';
+            document.getElementById('ent-validade').value = ''; 
+            document.getElementById('ent-teste').checked = false;
             document.getElementById('ent-lote').focus();
         });
 
@@ -715,29 +825,46 @@
             listaEntradaTemporaria.forEach((item, index) => {
                 const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
                 const badgeTeste = item.isTeste ? '<span class="px-2 py-1 text-xs font-bold rounded bg-purple-100 text-purple-800 uppercase">Teste CQ</span>' : '-';
-                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium">${item.nome}</td><td class="py-3">${item.lote}</td><td class="py-3">${valStr}</td><td class="py-3 text-center">${badgeTeste}</td><td class="py-3 text-right font-bold">${item.qtd.toFixed(2)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium">${item.nome}</td><td class="py-3 text-gray-500">${item.setor||'N/A'}</td><td class="py-3">${item.lote}</td><td class="py-3">${valStr}</td><td class="py-3 text-center">${badgeTeste}</td><td class="py-3 text-right font-bold">${item.qtd.toFixed(2)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></td></tr>`;
             });
         }
 
         document.getElementById('btn-salvar-entradas').addEventListener('click', async () => {
             if(listaEntradaTemporaria.length === 0) return;
+            const btn = document.getElementById('btn-salvar-entradas');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Salvando no Sistema...';
+            btn.disabled = true;
+
             try {
                 const batch = writeBatch(db);
                 const timestamp = new Date().toISOString();
                 listaEntradaTemporaria.forEach(item => {
                     batch.set(doc(collection(db, 'estoque')), { ...item });
-                    batch.set(doc(collection(db, 'movimentos')), { tipo: 'ENTRADA', nome: item.nome, lote: item.lote, qtd: item.qtd, und: item.und, isTeste: item.isTeste, data: timestamp, usuario: usuarioAtual.email });
+                    batch.set(doc(collection(db, 'movimentos')), { tipo: 'ENTRADA', nome: item.nome, setor: item.setor, lote: item.lote, qtd: item.qtd, und: item.und, isTeste: item.isTeste, data: timestamp, usuario: usuarioAtual.email });
                 });
                 await batch.commit();
-                showToast(`${listaEntradaTemporaria.length} itens registrados!`, 'success');
-                listaEntradaTemporaria = []; renderListaEntrada();
-                document.getElementById('form-entrada-item').reset(); document.getElementById('ent-data').valueAsDate = new Date();
-            } catch (error) { showToast('Erro ao salvar entradas: ' + error.message, 'error'); }
+                
+                window.showToast(`${listaEntradaTemporaria.length} itens registrados com sucesso!`, 'success');
+                listaEntradaTemporaria = []; 
+                renderListaEntrada();
+                document.getElementById('form-entrada-item').reset(); 
+                document.getElementById('ent-data').valueAsDate = new Date();
+                
+            } catch (error) { 
+                window.showToast('Erro ao salvar entradas: ' + error.message, 'error'); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         });
 
-        // Saída e Buscas...
+        // --- SAÍDA LOGIC E PREVIEW ---
         const inputSaiNome = document.getElementById('sai-nome');
+        const inputSaiQtd = document.getElementById('sai-qtd');
+        
         inputSaiNome.addEventListener('input', revalidarSaldoSaida);
+        inputSaiQtd.addEventListener('input', previewSaidaLotes);
         
         function obterSaldoLiberado(nomeItem) {
             let total = 0; let und = '';
@@ -762,16 +889,52 @@
                     document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado. (Retidos/bloqueados)</span>`;
                 }
             } else document.getElementById('sai-saldo-disp').innerHTML = '';
+            previewSaidaLotes();
+        }
+
+        function previewSaidaLotes() {
+            const nome = inputSaiNome.value.trim().toUpperCase();
+            const qtd = parseFloat(inputSaiQtd.value);
+            const previewBox = document.getElementById('sai-preview-box');
+
+            if (!nome || isNaN(qtd) || qtd <= 0) {
+                previewBox.innerHTML = '';
+                return;
+            }
+
+            let lotesItem = estoque.filter(l => l.nome === nome && l.qtd > 0 && analisarValidade(l.validade, l.isTeste).status !== 'BLOQUEADO' && analisarValidade(l.validade, l.isTeste).status !== 'TESTE');
+            lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
+
+            let qtdRestante = qtd;
+            let lotesUsados = [];
+
+            for (let lote of lotesItem) {
+                if (qtdRestante <= 0) break;
+                let retirar = Math.min(lote.qtd, qtdRestante);
+                qtdRestante -= retirar;
+                lotesUsados.push({ lote: lote.lote, qtd: retirar, und: lote.und });
+            }
+
+            if (qtdRestante > 0) {
+                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Quantidade solicitada excede o saldo liberado no sistema. ${qtdRestante.toFixed(2)} faltantes.</p>`;
+            } else {
+                let html = '<div class="text-xs bg-blue-50 p-3 rounded border border-blue-100"><strong class="text-blue-800 flex items-center mb-1"><i class="ph ph-magic-wand mr-1"></i> Lotes que sofrerão baixa (PVPS):</strong><ul class="space-y-1">';
+                lotesUsados.forEach(u => {
+                    html += `<li class="text-blue-700 flex justify-between"><span>Lote: <strong>${u.lote}</strong></span> <span>- ${u.qtd.toFixed(2)} ${u.und}</span></li>`;
+                });
+                html += '</ul></div>';
+                previewBox.innerHTML = html;
+            }
         }
 
         document.getElementById('form-saida-item').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nome = inputSaiNome.value.trim().toUpperCase(); const qtd = parseFloat(document.getElementById('sai-qtd').value);
+            const nome = inputSaiNome.value.trim().toUpperCase(); const qtd = parseFloat(inputSaiQtd.value);
             const disp = obterSaldoLiberado(nome);
-            if (qtd > disp.total) return showToast(`Excede o liberado (${disp.total.toFixed(2)}).`, 'error');
+            if (qtd > disp.total) return window.showToast(`Excede o liberado (${disp.total.toFixed(2)}).`, 'error');
             listaSaidaTemporaria.push({ nome, qtd, und: disp.und });
             renderListaSaida(); revalidarSaldoSaida();
-            document.getElementById('sai-qtd').value = ''; inputSaiNome.value = ''; inputSaiNome.focus();
+            inputSaiQtd.value = ''; inputSaiNome.value = ''; inputSaiNome.focus();
         });
 
         window.removerItemSaida = function(index) { listaSaidaTemporaria.splice(index, 1); renderListaSaida(); revalidarSaldoSaida(); }
@@ -782,18 +945,25 @@
             if(listaSaidaTemporaria.length === 0) { box.classList.add('hidden'); return; }
             box.classList.remove('hidden');
             listaSaidaTemporaria.forEach((item, index) => {
-                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium text-lg">${item.nome}</td><td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium text-lg">${item.nome}</td><td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td></tr>`;
             });
         }
 
         document.getElementById('btn-salvar-saidas').addEventListener('click', async () => {
             if(listaSaidaTemporaria.length === 0) return;
+            const btn = document.getElementById('btn-salvar-saidas');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Processando Baixas...';
+            btn.disabled = true;
+
             try {
                 const batch = writeBatch(db); const timestamp = new Date().toISOString();
                 let estoqueTemp = JSON.parse(JSON.stringify(estoque));
+                
                 for (let req of listaSaidaTemporaria) {
                     let lotesItem = estoqueTemp.filter(l => l.nome === req.nome && l.qtd > 0 && analisarValidade(l.validade, l.isTeste).status !== 'BLOQUEADO' && analisarValidade(l.validade, l.isTeste).status !== 'TESTE');
                     lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
+                    
                     let qtdRestante = req.qtd; let logBaixas = [];
                     for (let lote of lotesItem) {
                         if (qtdRestante <= 0) break;
@@ -802,12 +972,20 @@
                         logBaixas.push({ lote: lote.lote, retirado: retirar });
                         batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
                     }
-                    if (qtdRestante > 0) throw new Error(`Estoque insuficiente de ${req.nome}. Tente novamente.`);
+                    if (qtdRestante > 0) throw new Error(`Estoque insuficiente de ${req.nome}. Alguém pode ter modificado o saldo.`);
                     batch.set(doc(collection(db, 'movimentos')), { tipo: 'SAIDA', nome: req.nome, qtd: req.qtd, und: req.und, data: timestamp, detalhes_pvps: logBaixas, usuario: usuarioAtual.email });
                 }
-                await batch.commit(); showToast('Saídas processadas (PVPS aplicado)!', 'success');
+                
+                await batch.commit(); 
+                window.showToast('Saídas salvas com sucesso (PVPS aplicado)!', 'success');
                 listaSaidaTemporaria = []; renderListaSaida(); revalidarSaldoSaida();
-            } catch (error) { showToast(error.message, 'error'); }
+                document.getElementById('sai-preview-box').innerHTML = '';
+            } catch (error) { 
+                window.showToast(error.message, 'error'); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         });
 
         // --- TABELA DE ESTOQUE E FILTROS ---
@@ -820,58 +998,62 @@
 
             const termoBusca = document.getElementById('search-estoque').value.trim().toUpperCase();
             const ordem = document.getElementById('sort-estoque').value;
-
-            let lotesAtivos = estoque.filter(l => l.qtd > 0);
             
-            // Agrupar itens
+            // Agrupar itens MESMO ZERADOS
             let agrupado = {};
-            lotesAtivos.forEach(l => {
+            estoque.forEach(l => {
                 if(!agrupado[l.nome]) agrupado[l.nome] = { total: 0, und: l.und, lotes: [], vencMaisProximo: null };
                 agrupado[l.nome].total += Number(l.qtd);
-                agrupado[l.nome].lotes.push(l);
-
-                const v = new Date(l.validade);
-                if (!agrupado[l.nome].vencMaisProximo || v < agrupado[l.nome].vencMaisProximo) {
-                    agrupado[l.nome].vencMaisProximo = v;
+                if (l.qtd > 0) {
+                    agrupado[l.nome].lotes.push(l);
+                    const v = new Date(l.validade);
+                    if (!agrupado[l.nome].vencMaisProximo || v < agrupado[l.nome].vencMaisProximo) {
+                        agrupado[l.nome].vencMaisProximo = v;
+                    }
                 }
             });
 
-            // Converter para array para filtrar e ordenar
             let itensLista = Object.keys(agrupado).map(nome => ({ nome, ...agrupado[nome] }));
 
-            // Filtro Busca
             if (termoBusca) {
                 itensLista = itensLista.filter(i => i.nome.includes(termoBusca) || i.lotes.some(l => l.lote.toUpperCase().includes(termoBusca)));
             }
 
-            // Ordenação
             itensLista.sort((a, b) => {
                 if (ordem === 'nome-asc') return a.nome.localeCompare(b.nome);
                 if (ordem === 'nome-desc') return b.nome.localeCompare(a.nome);
                 if (ordem === 'qtd-desc') return b.total - a.total;
                 if (ordem === 'qtd-asc') return a.total - b.total;
-                if (ordem === 'val-asc') return a.vencMaisProximo - b.vencMaisProximo;
+                if (ordem === 'val-asc') {
+                    if(!a.vencMaisProximo) return 1;
+                    if(!b.vencMaisProximo) return -1;
+                    return a.vencMaisProximo - b.vencMaisProximo;
+                }
                 return 0;
             });
 
             if (itensLista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">Nenhum item encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">Nenhum item cadastrado ou encontrado.</td></tr>`;
                 return;
             }
 
             itensLista.forEach(item => {
-                let temTeste = item.lotes.some(l => l.isTeste);
-                let temBloqueado = item.lotes.some(l => !l.isTeste && analisarValidade(l.validade, false).diasRestantes <= 30);
+                let badges = '';
+                if (item.total <= 0) {
+                    badges = '<span class="px-2 py-1 text-[10px] font-bold rounded bg-gray-100 text-gray-500 uppercase border border-gray-200"><i class="ph ph-empty mr-1"></i> Zerado / Esgotado</span>';
+                } else {
+                    let temTeste = item.lotes.some(l => l.isTeste);
+                    let temBloqueado = item.lotes.some(l => !l.isTeste && analisarValidade(l.validade, false).diasRestantes <= 30);
+                    badges += temTeste ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-purple-100 text-purple-800 uppercase border border-purple-200"><i class="ph ph-flask mr-1"></i> Testes</span> ' : '';
+                    badges += temBloqueado ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 uppercase border border-red-200"><i class="ph ph-prohibit mr-1"></i> Bloqueados</span> ' : '';
+                    if(!temTeste && !temBloqueado) badges = '<span class="px-2 py-1 text-[10px] font-bold rounded bg-green-50 text-green-600 uppercase border border-green-100">Livre</span>';
+                }
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-brand-50 transition-colors border-b border-gray-100 group">
+                    <tr class="hover:bg-brand-50 transition-colors border-b border-gray-100 group ${item.total <= 0 ? 'opacity-70' : ''}">
                         <td class="p-4 font-bold text-gray-800 text-lg">${item.nome}</td>
                         <td class="p-4">
-                            <div class="flex flex-wrap gap-2">
-                                ${temTeste ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-purple-100 text-purple-800 uppercase border border-purple-200"><i class="ph ph-flask mr-1"></i> Contém Testes</span>' : ''}
-                                ${temBloqueado ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 uppercase border border-red-200"><i class="ph ph-prohibit mr-1"></i> Contém Bloqueados</span>' : ''}
-                                ${!temTeste && !temBloqueado ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-green-50 text-green-600 uppercase border border-green-100">Livre</span>' : ''}
-                            </div>
+                            <div class="flex flex-wrap gap-2">${badges}</div>
                         </td>
                         <td class="p-4 text-right font-bold text-gray-800 text-xl">
                             ${item.total.toFixed(2)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
@@ -908,11 +1090,15 @@
             const tbody = document.getElementById('modal-lotes-tbody');
             tbody.innerHTML = '';
 
-            let lotesItem = estoque.filter(l => l.nome === itemAtualModal && l.qtd > 0);
+            let lotesItem = estoque.filter(l => l.nome === itemAtualModal); // Incluindo todos que foram dados entrada, filtraremos qtd=0
+            
+            // Para lotes específicos, só vamos mostrar no modal de gerenciamento se tiver algo nele ou se for recém adicionado? 
+            // Vamos filtrar > 0 pra manter limpo, já que histórico de saída fica nas edições ou em relatórios.
+            lotesItem = lotesItem.filter(l => l.qtd > 0);
             lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
 
             if (lotesItem.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lote com saldo encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhum lote com saldo no momento.</td></tr>`;
                 return;
             }
 
@@ -933,6 +1119,7 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="py-3 px-4 font-bold text-gray-800">${l.lote}</td>
+                        <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
                         <td class="py-3 px-4 text-gray-600">${dataEnt}</td>
                         <td class="py-3 px-4 text-gray-600">
                             ${dataVal} <span class="text-[10px] ml-1 ${analise.diasRestantes <= 35 && !l.isTeste ? 'text-red-500 font-bold' : 'text-gray-400'}">(${analise.diasRestantes}d)</span>
@@ -962,8 +1149,8 @@
                 const lote = estoque.find(l => l.id === loteId);
                 await updateDoc(doc(db, 'estoque', loteId), { isTeste: false });
                 registrarEdicao(lote.nome, 'LIBERAÇÃO CQ', `Lote ${lote.lote} liberado pelo CQ.`);
-                showToast("Lote liberado para expedição!", "success");
-            } catch(error) { showToast('Erro ao liberar lote: ' + error.message, 'error'); }
+                window.showToast("Lote liberado para expedição!", "success");
+            } catch(error) { window.showToast('Erro ao liberar lote: ' + error.message, 'error'); }
         }
 
         window.abrirModalEdicao = function(loteId) {
@@ -993,20 +1180,14 @@
 
             try {
                 const oldLoteData = estoque.find(l => l.id === id);
-                await updateDoc(doc(db, 'estoque', id), {
-                    lote: novoLote,
-                    qtd: novaQtd,
-                    validade: novaVal
-                });
+                await updateDoc(doc(db, 'estoque', id), { lote: novoLote, qtd: novaQtd, validade: novaVal });
 
                 const detalhe = `Alterou Lote [${oldLoteData.lote} -> ${novoLote}], Qtd [${oldLoteData.qtd} -> ${novaQtd}], Val [${oldLoteData.validade} -> ${novaVal}]`;
                 await registrarEdicao(nome, 'EDIÇÃO', detalhe);
 
-                fecharModalEdicao();
-                showToast('Lote atualizado com sucesso!', 'success');
-            } catch (error) {
-                showToast('Erro ao atualizar: ' + error.message, 'error');
-            }
+                window.fecharModalEdicao();
+                window.showToast('Lote atualizado com sucesso!', 'success');
+            } catch (error) { window.showToast('Erro ao atualizar: ' + error.message, 'error'); }
         });
 
         window.excluirLote = async function(loteId) {
@@ -1016,20 +1197,12 @@
                 await deleteDoc(doc(db, 'estoque', loteId));
                 
                 await registrarEdicao(lote.nome, 'EXCLUSÃO', `Removeu o Lote: ${lote.lote} (Qtd: ${lote.qtd} ${lote.und})`);
-                showToast('Lote removido do estoque.', 'success');
-            } catch (error) {
-                showToast('Erro ao remover: ' + error.message, 'error');
-            }
+                window.showToast('Lote removido do estoque.', 'success');
+            } catch (error) { window.showToast('Erro ao remover: ' + error.message, 'error'); }
         }
 
         async function registrarEdicao(nomeItem, acao, detalhes) {
-            await addDoc(collection(db, 'edicoes'), {
-                data: new Date().toISOString(),
-                nome: nomeItem,
-                acao: acao,
-                detalhes: detalhes,
-                usuario: usuarioAtual.email
-            });
+            await addDoc(collection(db, 'edicoes'), { data: new Date().toISOString(), nome: nomeItem, acao: acao, detalhes: detalhes, usuario: usuarioAtual.email });
         }
 
         // --- MODAL HISTÓRICO ---
@@ -1066,6 +1239,53 @@
 
         window.fecharModalHistorico = function() {
             document.getElementById('modal-historico').classList.add('hidden');
+        }
+
+        // --- INVENTÁRIO CÍCLICO ---
+        window.gerarFichaInventario = function(onlyUpdateSelect = false) {
+            if (onlyUpdateSelect) return; // called by atualizarUI just to refresh visual layout if needed
+            
+            const setorFiltro = document.getElementById('inv-setor').value;
+            const printArea = document.getElementById('print-area');
+            const tbody = document.getElementById('inv-print-tbody');
+            const meta = document.getElementById('inv-print-meta');
+            
+            tbody.innerHTML = '';
+            
+            let itemsParaContar = estoque.filter(l => l.qtd > 0); // Só lotes que tem saldo no sistema para verificação física
+            if (setorFiltro) {
+                itemsParaContar = itemsParaContar.filter(i => (i.setor || 'N/A') === setorFiltro);
+            }
+            
+            // Ordenar por Setor -> Nome -> Validade
+            itemsParaContar.sort((a, b) => {
+                let sA = a.setor || 'N/A'; let sB = b.setor || 'N/A';
+                if (sA !== sB) return sA.localeCompare(sB);
+                if (a.nome !== b.nome) return a.nome.localeCompare(b.nome);
+                return new Date(a.validade) - new Date(b.validade);
+            });
+
+            if(itemsParaContar.length === 0) {
+                window.showToast('Nenhum item com saldo encontrado neste setor.', 'error');
+                return;
+            }
+            
+            itemsParaContar.forEach(item => {
+                const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-300">
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-600 text-xs uppercase">${item.setor || '-'}</td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-900 font-medium text-sm">${item.nome}</td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-xs text-center font-bold">${item.lote}</td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-600 text-xs text-center">${valStr}</td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-right font-bold">${Number(item.qtd).toFixed(2)} <span class="text-[10px] font-normal text-gray-500">${item.und}</span></td>
+                        <td class="py-2 px-3 text-center text-gray-400">_________________</td>
+                    </tr>
+                `;
+            });
+            
+            meta.innerText = `Setor: ${setorFiltro || 'TODOS OS SETORES'} | Data de Impressão: ${new Date().toLocaleDateString('pt-BR')}`;
+            printArea.classList.remove('hidden');
         }
 
     </script>
