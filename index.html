@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Expedição</title>
+    <title>Expedição OS</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons -->
@@ -54,6 +54,7 @@
             #main-container { overflow: visible !important; height: auto !important; padding: 0 !important; }
             #view-inventario { display: block !important; }
             #print-area { display: block !important; position: static !important; width: 100%; box-shadow: none !important; border: none !important; margin-top: 0 !important;}
+            #inv-selection-area, #inv-lancamento-area { display: none !important; }
         }
     </style>
 </head>
@@ -68,10 +69,10 @@
     <!-- Login View -->
     <div id="login-view" class="hidden fixed inset-0 bg-gray-50 z-40 flex items-center justify-center">
         <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center border border-gray-100">
-            <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="ph-fill ph-package text-brand-500 text-3xl"></i>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Expedição PRO</h1>
+            <!-- Substituindo ícone pela Logo enviada -->
+            <img src="logo.png" alt="Expedição OS Logo" class="h-20 mx-auto mb-6 object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x60?text=LOGO';">
+            
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Expedição OS</h1>
             <p class="text-gray-500 text-sm mb-8">Faça login para gerenciar o estoque e as expedições.</p>
             
             <button id="btn-login" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors flex items-center justify-center">
@@ -92,8 +93,8 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-10 shrink-0">
             <div class="h-16 flex items-center px-6 border-b border-gray-100">
-                <i class="ph-fill ph-package text-brand-500 text-2xl mr-2"></i>
-                <h1 class="text-lg font-bold text-gray-900">Expedição PRO</h1>
+                <img src="logo.png" alt="Logo" class="h-8 mr-2 object-contain" onerror="this.onerror=null; this.src='https://via.placeholder.com/80x30?text=LOGO';">
+                <h1 class="text-lg font-bold text-gray-900">Expedição OS</h1>
             </div>
             
             <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
@@ -386,9 +387,11 @@
 
                 <!-- VIEW: INVENTÁRIO CÍCLICO -->
                 <div id="view-inventario" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto no-print">
+                    
+                    <!-- AREA: SELEÇÃO -->
+                    <div id="inv-selection-area" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-5xl mx-auto no-print">
                         <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="ph ph-clipboard-text text-brand-500 mr-2 text-xl"></i> Gerar Ficha de Inventário Cíclico
+                            <i class="ph ph-clipboard-text text-brand-500 mr-2 text-xl"></i> Inventário Cíclico e Lançamentos
                         </h3>
                         
                         <div class="flex flex-col md:flex-row gap-4 mb-4">
@@ -406,7 +409,7 @@
                         </div>
 
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-bold text-gray-700">Selecione os itens para contar:</span>
+                            <span class="text-sm font-bold text-gray-700">Selecione os itens para realizar o inventário:</span>
                             <div class="space-x-3 text-sm">
                                 <button type="button" onclick="window.selectAllInv()" class="text-brand-600 hover:text-brand-800 font-bold transition-colors">Marcar Visíveis</button>
                                 <button type="button" onclick="window.clearAllInv()" class="text-gray-500 hover:text-gray-700 transition-colors">Limpar Tudo</button>
@@ -414,16 +417,57 @@
                         </div>
 
                         <!-- Container de Checkboxes (Itens Únicos) -->
-                        <div id="inv-items-container" class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2 mb-6 bg-gray-50">
+                        <div id="inv-items-container" class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6 bg-gray-50">
                             <!-- JS preenche -->
                         </div>
 
-                        <button onclick="window.gerarFichaInventario()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-printer mr-2 text-xl"></i> Criar Relatório para Contagem
+                        <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-gray-100">
+                            <button onclick="window.gerarFichaInventario()" class="flex-1 bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                                <i class="ph ph-printer mr-2 text-xl"></i> Imprimir Ficha de Contagem
+                            </button>
+                            <button onclick="window.abrirLancamentoInventario()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                                <i class="ph ph-keyboard mr-2 text-xl"></i> Lançar Contagem Digital
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AREA: LANÇAMENTO DIGITAL DE CONTAGEM -->
+                    <div id="inv-lancamento-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-5xl mx-auto no-print">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i class="ph ph-keyboard text-brand-500 mr-2"></i> Lançamento de Contagem Física
+                            </h3>
+                            <button onclick="window.fecharLancamentoInventario()" class="text-gray-500 hover:text-gray-800 font-medium text-sm flex items-center">
+                                <i class="ph ph-arrow-left mr-1"></i> Voltar à Seleção
+                            </button>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-4">Insira a quantidade física encontrada para cada lote. O sistema calculará a divergência e fará os ajustes automaticamente.</p>
+                        
+                        <div class="overflow-x-auto border border-gray-200 rounded-lg mb-6">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr class="text-gray-500 border-b border-gray-200">
+                                        <th class="py-3 px-4 font-semibold">Setor</th>
+                                        <th class="py-3 px-4 font-semibold">Item</th>
+                                        <th class="py-3 px-4 font-semibold">Lote</th>
+                                        <th class="py-3 px-4 font-semibold text-right">Qtd Sistema</th>
+                                        <th class="py-3 px-4 font-semibold text-center w-40">Qtd Física Encontrada</th>
+                                        <th class="py-3 px-4 font-semibold text-right">Divergência</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inv-lancamento-tbody" class="divide-y divide-gray-100">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button id="btn-aplicar-ajustes" onclick="window.salvarAjustesInventario()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar e Aplicar Ajustes no Estoque
                         </button>
                     </div>
 
-                    <!-- Print Area -->
+                    <!-- Print Area (Ficha) -->
                     <div id="print-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto mt-6">
                         <div class="flex justify-between items-center border-b-2 border-gray-800 pb-4 mb-6">
                             <div>
@@ -431,8 +475,7 @@
                                 <p class="text-gray-600 mt-1" id="inv-print-meta">Data: --</p>
                             </div>
                             <div>
-                                <!-- Substitua "logo.png" pelo nome correto da sua imagem upada no Github se for diferente -->
-                                <img src="logo.png" alt="IMAC Logo" class="h-14 object-contain">
+                                <img src="logo.png" alt="Expedição OS Logo" class="h-14 object-contain" onerror="this.onerror=null; this.src='';">
                             </div>
                         </div>
                         <table class="w-full text-left border-collapse text-sm mb-6">
@@ -590,7 +633,8 @@
         let edicoes = []; 
         let listaEntradaTemporaria = [];
         let listaSaidaTemporaria = [];
-        let selectedInvItems = new Set(); // Controle dos checkboxes do inventário
+        let selectedInvItems = new Set(); 
+        let currentInvData = []; // Armazena dados temporarios de contagem
         
         let unsubEstoque = null;
         let unsubMovimentos = null;
@@ -599,7 +643,6 @@
 
         document.getElementById('ent-data').valueAsDate = new Date();
 
-        // Expôe o toast globalmente para chamadas HTML
         window.showToast = function(message, type) {
             const toast = document.getElementById('toast');
             const iconContainer = document.getElementById('toast-icon');
@@ -686,8 +729,9 @@
             if (document.getElementById('view-dashboard').classList.contains('block')) updateDashboard();
             if (document.getElementById('view-estoque').classList.contains('block')) renderTabelaEstoque();
             if (document.getElementById('view-saida').classList.contains('block')) revalidarSaldoSaida();
-            if (document.getElementById('view-inventario').classList.contains('block')) window.renderInventarioLista();
-            
+            if (document.getElementById('view-inventario').classList.contains('block') && !document.getElementById('inv-lancamento-area').classList.contains('block')) {
+                window.renderInventarioLista();
+            }
             if (!document.getElementById('modal-item').classList.contains('hidden') && itemAtualModal) {
                 renderModalLotes();
             }
@@ -1238,7 +1282,7 @@
             } else {
                 histItem.forEach(log => {
                     const dataFormatada = new Date(log.data).toLocaleString('pt-BR');
-                    const corAcao = log.acao === 'EXCLUSÃO' ? 'text-red-600 bg-red-50' : (log.acao === 'EDIÇÃO' ? 'text-blue-600 bg-blue-50' : 'text-purple-600 bg-purple-50');
+                    const corAcao = log.acao === 'EXCLUSÃO' ? 'text-red-600 bg-red-50' : (log.acao === 'EDIÇÃO' ? 'text-blue-600 bg-blue-50' : (log.acao === 'INVENTÁRIO' ? 'text-orange-600 bg-orange-50' : 'text-purple-600 bg-purple-50'));
                     
                     ul.innerHTML += `
                         <li class="border-b border-gray-100 pb-3 last:border-0">
@@ -1279,13 +1323,12 @@
 
             itens.sort((a,b) => a.nome.localeCompare(b.nome));
 
-            // Aplica filtros visuais
             if (setorFiltro) itens = itens.filter(i => i.setor === setorFiltro);
             if (buscaFiltro) itens = itens.filter(i => i.nome.includes(buscaFiltro));
 
             container.innerHTML = '';
             if (itens.length === 0) {
-                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Nenhum item encontrado.</p>';
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4 col-span-full">Nenhum item encontrado.</p>';
                 return;
             }
 
@@ -1320,7 +1363,6 @@
             window.renderInventarioLista();
         }
 
-        // Listeners para busca do inventário
         document.getElementById('inv-setor-filtro')?.addEventListener('change', window.renderInventarioLista);
         document.getElementById('inv-busca-filtro')?.addEventListener('input', window.renderInventarioLista);
 
@@ -1330,7 +1372,7 @@
             const meta = document.getElementById('inv-print-meta');
             
             if (selectedInvItems.size === 0) {
-                window.showToast('Selecione pelo menos um item usando as caixinhas para gerar a ficha.', 'error');
+                window.showToast('Selecione pelo menos um item para gerar a ficha.', 'error');
                 return;
             }
 
@@ -1338,7 +1380,6 @@
             
             let itemsParaContar = estoque.filter(l => selectedInvItems.has(l.nome)); 
             
-            // Ordenar por Setor -> Nome -> Validade
             itemsParaContar.sort((a, b) => {
                 let sA = a.setor || 'N/A'; let sB = b.setor || 'N/A';
                 if (sA !== sB) return sA.localeCompare(sB);
@@ -1361,10 +1402,130 @@
             });
             
             meta.innerText = `Itens Selecionados: ${selectedInvItems.size} | Data de Impressão: ${new Date().toLocaleDateString('pt-BR')}`;
-            printArea.classList.remove('hidden');
             
-            // Scroll para área de impressão
+            document.getElementById('inv-selection-area').classList.remove('hidden');
+            document.getElementById('inv-lancamento-area').classList.add('hidden');
+            printArea.classList.remove('hidden');
             printArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- LANÇAMENTO DIGITAL DE INVENTÁRIO ---
+        window.abrirLancamentoInventario = function() {
+            if (selectedInvItems.size === 0) {
+                window.showToast('Selecione os itens nas caixas de seleção primeiro.', 'error');
+                return;
+            }
+
+            document.getElementById('inv-selection-area').classList.add('hidden');
+            document.getElementById('print-area').classList.add('hidden');
+            document.getElementById('inv-lancamento-area').classList.remove('hidden');
+
+            const tbody = document.getElementById('inv-lancamento-tbody');
+            tbody.innerHTML = '';
+            
+            currentInvData = [];
+            
+            let itemsParaContar = estoque.filter(l => selectedInvItems.has(l.nome)); 
+            itemsParaContar.sort((a, b) => {
+                let sA = a.setor || 'N/A'; let sB = b.setor || 'N/A';
+                if (sA !== sB) return sA.localeCompare(sB);
+                if (a.nome !== b.nome) return a.nome.localeCompare(b.nome);
+                return new Date(a.validade) - new Date(b.validade);
+            });
+
+            itemsParaContar.forEach(l => {
+                currentInvData.push(l);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
+                        <td class="py-3 px-4 font-bold text-gray-800">${l.nome}</td>
+                        <td class="py-3 px-4 text-gray-600">${l.lote || '-'}</td>
+                        <td class="py-3 px-4 text-right text-gray-500">${Number(l.qtd).toFixed(2)} <span class="text-xs">${l.und}</span></td>
+                        <td class="py-3 px-4 text-center">
+                            <input type="number" step="0.01" id="fisica-${l.id}" 
+                                class="w-24 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" 
+                                placeholder="0.00" oninput="window.calcDivergencia('${l.id}', ${l.qtd})">
+                        </td>
+                        <td class="py-3 px-4 text-right font-bold" id="div-${l.id}">--</td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.fecharLancamentoInventario = function() {
+            document.getElementById('inv-lancamento-area').classList.add('hidden');
+            document.getElementById('inv-selection-area').classList.remove('hidden');
+        }
+
+        window.calcDivergencia = function(id, sistemaQtd) {
+            const inputVal = document.getElementById(`fisica-${id}`).value;
+            const divSpan = document.getElementById(`div-${id}`);
+            
+            if (inputVal === '') {
+                divSpan.innerText = '--';
+                divSpan.className = 'py-3 px-4 text-right font-bold text-gray-400';
+                return;
+            }
+
+            const dif = parseFloat(inputVal) - parseFloat(sistemaQtd);
+            
+            if (dif === 0) {
+                divSpan.innerText = 'OK (0.00)';
+                divSpan.className = 'py-3 px-4 text-right font-bold text-green-500';
+            } else if (dif > 0) {
+                divSpan.innerText = `+${dif.toFixed(2)}`;
+                divSpan.className = 'py-3 px-4 text-right font-bold text-blue-500';
+            } else {
+                divSpan.innerText = `${dif.toFixed(2)}`;
+                divSpan.className = 'py-3 px-4 text-right font-bold text-red-500';
+            }
+        }
+
+        window.salvarAjustesInventario = async function() {
+            const btn = document.getElementById('btn-aplicar-ajustes');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Processando Ajustes...';
+            btn.disabled = true;
+
+            try {
+                const batch = writeBatch(db);
+                let ajustesRealizados = 0;
+
+                for (const l of currentInvData) {
+                    const inputVal = document.getElementById(`fisica-${l.id}`).value;
+                    if (inputVal === '') continue; // Ignora se não foi digitado nada
+                    
+                    const qtdFisica = parseFloat(inputVal);
+                    if (qtdFisica !== Number(l.qtd)) {
+                        ajustesRealizados++;
+                        const dif = qtdFisica - Number(l.qtd);
+                        
+                        batch.update(doc(db, 'estoque', l.id), { qtd: qtdFisica });
+                        
+                        await registrarEdicao(l.nome, 'INVENTÁRIO', `Ajuste de Inventário Lote [${l.lote}]. Sis: ${Number(l.qtd).toFixed(2)} -> Físico: ${qtdFisica.toFixed(2)} (Divergência: ${dif > 0 ? '+'+dif.toFixed(2) : dif.toFixed(2)})`);
+                        
+                        batch.set(doc(collection(db, 'movimentos')), { 
+                            tipo: 'AJUSTE', nome: l.nome, lote: l.lote, qtd: dif, und: l.und, data: new Date().toISOString(), usuario: usuarioAtual.email, nota: 'Ajuste de Inventário Cíclico' 
+                        });
+                    }
+                }
+
+                if (ajustesRealizados === 0) {
+                    window.showToast('Nenhuma divergência encontrada ou campos em branco.', 'success');
+                    window.fecharLancamentoInventario();
+                    return;
+                }
+
+                await batch.commit();
+                window.showToast(`${ajustesRealizados} ajustes de inventário aplicados com sucesso!`, 'success');
+                window.fecharLancamentoInventario();
+                
+            } catch (error) {
+                window.showToast('Erro ao salvar ajustes: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
     </script>
