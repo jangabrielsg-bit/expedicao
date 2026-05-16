@@ -94,7 +94,7 @@
                     <i class="ph ph-box-arrow-up text-lg mr-3"></i> Saída (PVPS)
                 </button>
                 <button onclick="window.navigate('estoque')" id="nav-estoque" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-stack text-lg mr-3"></i> Saldo e Alertas
+                    <i class="ph ph-stack text-lg mr-3"></i> Estoque
                 </button>
             </nav>
 
@@ -135,25 +135,8 @@
 
                 <!-- VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="space-y-6 block">
-                    <!-- Info Card -->
-                    <div class="bg-brand-50 border border-brand-200 rounded-xl p-6 flex justify-between items-center shadow-sm">
-                        <div class="flex items-start">
-                            <div class="bg-white p-3 rounded-lg shadow-sm mr-4 border border-brand-100">
-                                <i class="ph ph-book-open text-brand-600 text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800">Saúde do Estoque</h3>
-                                <p class="text-sm text-brand-800 mt-1">Status atualizado com base na regra de 30 dias para expedição.</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span id="dash-health-percent" class="text-3xl font-bold text-brand-600">--%</span>
-                            <p class="text-xs font-medium text-brand-800 mt-1 uppercase">Itens Liberados</p>
-                        </div>
-                    </div>
-
                     <!-- Grid de Métricas -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="text-sm font-bold text-gray-500 uppercase">Total em Estoque</h4>
@@ -163,23 +146,30 @@
                         </div>
 
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
-                            <div class="absolute right-0 top-0 w-2 h-full bg-yellow-400"></div>
+                            <div class="absolute right-0 top-0 w-1.5 h-full bg-yellow-400"></div>
                             <div class="flex justify-between items-center mb-4">
-                                <h4 class="text-sm font-bold text-gray-500 uppercase">Alerta (Vence < 35 dias)</h4>
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Alerta (Vence < 35d)</h4>
                                 <i class="ph ph-warning-circle text-yellow-500 text-xl"></i>
                             </div>
                             <p id="dash-alert-items" class="text-2xl font-bold text-gray-800">0</p>
-                            <p class="text-xs text-gray-500 mt-2">Atenção para expedição em breve</p>
                         </div>
 
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
-                            <div class="absolute right-0 top-0 w-2 h-full bg-red-500"></div>
+                            <div class="absolute right-0 top-0 w-1.5 h-full bg-red-500"></div>
                             <div class="flex justify-between items-center mb-4">
-                                <h4 class="text-sm font-bold text-gray-500 uppercase">Bloqueados (Vence < 30 dias)</h4>
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Bloqueados (< 30d)</h4>
                                 <i class="ph ph-prohibit text-red-500 text-xl"></i>
                             </div>
                             <p id="dash-blocked-items" class="text-2xl font-bold text-gray-800">0</p>
-                            <p class="text-xs text-gray-500 mt-2">Não podem ir para as lojas</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-1.5 h-full bg-purple-500"></div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Em Teste (CQ)</h4>
+                                <i class="ph ph-flask text-purple-500 text-xl"></i>
+                            </div>
+                            <p id="dash-test-items" class="text-2xl font-bold text-gray-800">0</p>
                         </div>
                     </div>
                     
@@ -209,16 +199,16 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div>
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lote</label>
                                     <input type="text" id="ent-lote" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Lote do fabricante">
                                 </div>
-                                <div>
+                                <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
                                     <input type="number" step="0.01" id="ent-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
                                 </div>
-                                <div>
+                                <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unidade</label>
                                     <select id="ent-und" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
                                         <option value="und">Unidade (und)</option>
@@ -226,9 +216,15 @@
                                         <option value="cx">Caixa (cx)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Data de Validade</label>
+                                <div class="col-span-1">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Validade</label>
                                     <input type="date" id="ent-validade" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                </div>
+                                <div class="col-span-1 flex flex-col justify-center border border-gray-200 bg-gray-50 rounded-lg px-4">
+                                    <label class="flex items-center space-x-2 cursor-pointer w-full h-full py-2">
+                                        <input type="checkbox" id="ent-teste" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                        <span class="text-sm font-bold text-gray-700">É Teste?</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -250,6 +246,7 @@
                                         <th class="py-2">Item</th>
                                         <th class="py-2">Lote</th>
                                         <th class="py-2">Validade</th>
+                                        <th class="py-2 text-center">Status</th>
                                         <th class="py-2 text-right">Qtd</th>
                                         <th class="py-2 text-center">Ação</th>
                                     </tr>
@@ -267,7 +264,7 @@
                 <div id="view-saida" class="hidden space-y-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
                         <div class="bg-brand-50 text-brand-800 p-4 rounded-lg mb-6 border border-brand-200 text-sm">
-                            <i class="ph-fill ph-info mr-1"></i> <strong>Atenção PVPS:</strong> O sistema dará baixa automaticamente nos lotes com a data de validade mais próxima. Lotes a menos de 30 dias do vencimento estão bloqueados.
+                            <i class="ph-fill ph-info mr-1"></i> <strong>Atenção PVPS:</strong> O sistema dará baixa automaticamente nos lotes com a data de validade mais próxima. Lotes a menos de 30 dias ou em <strong>Teste</strong> estão bloqueados.
                         </div>
                         
                         <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -321,23 +318,22 @@
                 <div id="view-estoque" class="hidden">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h3 class="font-bold text-gray-800">Saldo por Lote e Status de Validade</h3>
+                            <h3 class="font-bold text-gray-800">Estoque Consolidado</h3>
                             <div class="flex space-x-4 text-xs font-medium">
                                 <span class="flex items-center text-green-600"><div class="w-3 h-3 rounded-full bg-green-500 mr-1"></div> Liberado</span>
                                 <span class="flex items-center text-yellow-600"><div class="w-3 h-3 rounded-full bg-yellow-400 mr-1"></div> Alerta ( < 35d )</span>
                                 <span class="flex items-center text-red-600"><div class="w-3 h-3 rounded-full bg-red-500 mr-1"></div> Bloqueado ( < 30d )</span>
+                                <span class="flex items-center text-purple-600"><div class="w-3 h-3 rounded-full bg-purple-500 mr-1"></div> Teste (CQ)</span>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-white border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
-                                        <th class="p-4 font-bold">Status</th>
+                                        <th class="p-4 w-10"></th>
                                         <th class="p-4 font-bold">Item</th>
-                                        <th class="p-4 font-bold">Lote</th>
-                                        <th class="p-4 font-bold">Validade</th>
-                                        <th class="p-4 font-bold">Dias Restantes</th>
-                                        <th class="p-4 font-bold text-right">Saldo</th>
+                                        <th class="p-4 font-bold">Avisos</th>
+                                        <th class="p-4 font-bold text-right">Saldo Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-estoque" class="text-sm divide-y divide-gray-50">
@@ -359,12 +355,10 @@
     </div>
 
     <script type="module">
-        // Import Firebase SDK (Versão 11.6.1 compatível com Canvas/Modern JS)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuração Firebase fornecida
         const firebaseConfig = {
             apiKey: "AIzaSyB8qJQ-qTQGEWo1iA_NW_3VY-18jVOZxbM",
             authDomain: "expedicao-8d1f0.firebaseapp.com",
@@ -375,7 +369,6 @@
             measurementId: "G-85736YNKR7"
         };
 
-        // Init Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -389,23 +382,17 @@
         let unsubEstoque = null;
         let unsubMovimentos = null;
 
-        // Definindo inputs de data inicial
         document.getElementById('ent-data').valueAsDate = new Date();
 
         // --- CONTROLE DE AUTENTICAÇÃO ---
         const provider = new GoogleAuthProvider();
         
         document.getElementById('btn-login').addEventListener('click', async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                showToast('Erro ao fazer login: ' + error.message, 'error');
-            }
+            try { await signInWithPopup(auth, provider); } 
+            catch (error) { showToast('Erro ao fazer login: ' + error.message, 'error'); }
         });
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            signOut(auth);
-        });
+        document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
 
         onAuthStateChanged(auth, (user) => {
             const loader = document.getElementById('loader');
@@ -419,7 +406,6 @@
                 loginView.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 
-                // Atualizar UI do Usuário
                 document.getElementById('user-name').innerText = user.displayName || user.email;
                 if (user.photoURL) {
                     const img = document.getElementById('user-avatar');
@@ -442,27 +428,17 @@
 
         // --- SINCRONIZAÇÃO COM FIRESTORE ---
         function iniciarListenersBanco() {
-            // Monitorar Estoque
             unsubEstoque = onSnapshot(collection(db, 'estoque'), (snapshot) => {
                 estoque = [];
-                snapshot.forEach(doc => {
-                    estoque.push({ id: doc.id, ...doc.data() });
-                });
+                snapshot.forEach(doc => { estoque.push({ id: doc.id, ...doc.data() }); });
                 atualizarUI();
-            }, (error) => {
-                showToast('Erro ao ler estoque.', 'error');
-            });
+            }, (error) => { showToast('Erro ao ler estoque.', 'error'); });
 
-            // Monitorar Movimentos (Para médias)
             unsubMovimentos = onSnapshot(collection(db, 'movimentos'), (snapshot) => {
                 movimentos = [];
-                snapshot.forEach(doc => {
-                    movimentos.push({ id: doc.id, ...doc.data() });
-                });
+                snapshot.forEach(doc => { movimentos.push({ id: doc.id, ...doc.data() }); });
                 atualizarUI();
-            }, (error) => {
-                console.error("Erro movimentos:", error);
-            });
+            }, (error) => { console.error("Erro movimentos:", error); });
         }
 
         function atualizarUI() {
@@ -474,7 +450,7 @@
 
         // --- NAVEGAÇÃO ---
         const views = ['dashboard', 'entrada', 'saida', 'estoque'];
-        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Gestão de Estoque' };
+        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Estoque' };
 
         window.navigate = function(viewId) {
             views.forEach(v => {
@@ -492,7 +468,7 @@
         }
 
         // --- LÓGICA DE NEGÓCIO E VALIDADE ---
-        function analisarValidade(dataValidadeStr) {
+        function analisarValidade(dataValidadeStr, isTeste = false) {
             const hoje = new Date();
             hoje.setHours(0,0,0,0);
             const dataValidade = new Date(dataValidadeStr + 'T12:00:00'); 
@@ -500,13 +476,13 @@
             const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
             let status = 'LIBERADO';
-            if (diasRestantes <= 30) status = 'BLOQUEADO';
+            if (isTeste) status = 'TESTE';
+            else if (diasRestantes <= 30) status = 'BLOQUEADO';
             else if (diasRestantes <= 35) status = 'ALERTA';
 
             return { status, diasRestantes };
         }
 
-        // Autocomplete inteligente
         function atualizarDatalist() {
             const datalist = document.getElementById('estoque-itens-list');
             const itensUnicos = [...new Set(estoque.map(item => item.nome))];
@@ -515,31 +491,28 @@
 
         // --- DASHBOARD ---
         function updateDashboard() {
-            let totalItens = 0, alertas = 0, bloqueados = 0, lotesComSaldo = 0;
+            let totalItens = 0, alertas = 0, bloqueados = 0, testes = 0;
 
             estoque.forEach(lote => {
                 if (lote.qtd > 0) {
-                    lotesComSaldo++;
                     totalItens += lote.qtd;
-                    const analise = analisarValidade(lote.validade);
-                    if (analise.status === 'BLOQUEADO') bloqueados++;
-                    if (analise.status === 'ALERTA') alertas++;
+                    const analise = analisarValidade(lote.validade, lote.isTeste);
+                    if (analise.status === 'TESTE') testes++;
+                    else if (analise.status === 'BLOQUEADO') bloqueados++;
+                    else if (analise.status === 'ALERTA') alertas++;
                 }
             });
 
             document.getElementById('dash-total-items').innerText = totalItens.toFixed(2);
             document.getElementById('dash-alert-items').innerText = alertas;
             document.getElementById('dash-blocked-items').innerText = bloqueados;
-
-            let saude = 100;
-            if (lotesComSaldo > 0) saude = ((lotesComSaldo - bloqueados) / lotesComSaldo) * 100;
-            document.getElementById('dash-health-percent').innerText = `${saude.toFixed(0)}%`;
+            document.getElementById('dash-test-items').innerText = testes;
 
             calcularMedias();
         }
 
         function calcularMedias() {
-            const diasAnalise = 30; // Analisando últimos 30 dias
+            const diasAnalise = 30; 
             const limiteAtras = new Date();
             limiteAtras.setDate(limiteAtras.getDate() - diasAnalise);
             
@@ -583,6 +556,7 @@
             const nome = document.getElementById('ent-nome').value.trim().toUpperCase();
             const lote = document.getElementById('ent-lote').value.trim();
             const qtd = parseFloat(document.getElementById('ent-qtd').value);
+            const isTeste = document.getElementById('ent-teste').checked;
             
             listaEntradaTemporaria.push({
                 nome,
@@ -590,15 +564,16 @@
                 lote,
                 qtd,
                 und: document.getElementById('ent-und').value,
-                validade: document.getElementById('ent-validade').value
+                validade: document.getElementById('ent-validade').value,
+                isTeste
             });
             
             renderListaEntrada();
             
-            // Limpa apenas lote, qtd e validade, mantendo nome e data para agilizar
             document.getElementById('ent-lote').value = '';
             document.getElementById('ent-qtd').value = '';
             document.getElementById('ent-validade').value = '';
+            document.getElementById('ent-teste').checked = false;
             document.getElementById('ent-lote').focus();
         });
 
@@ -620,11 +595,14 @@
             box.classList.remove('hidden');
             listaEntradaTemporaria.forEach((item, index) => {
                 const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                const badgeTeste = item.isTeste ? '<span class="px-2 py-1 text-xs font-bold rounded bg-purple-100 text-purple-800 uppercase">Teste CQ</span>' : '-';
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="py-3 font-medium">${item.nome}</td>
                         <td class="py-3">${item.lote}</td>
                         <td class="py-3">${valStr}</td>
+                        <td class="py-3 text-center">${badgeTeste}</td>
                         <td class="py-3 text-right font-bold">${item.qtd.toFixed(2)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td>
                         <td class="py-3 text-center">
                             <button onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button>
@@ -642,11 +620,9 @@
                 const timestamp = new Date().toISOString();
 
                 listaEntradaTemporaria.forEach(item => {
-                    // Adicionar ao estoque
                     const refEstoque = doc(collection(db, 'estoque'));
                     batch.set(refEstoque, { ...item });
 
-                    // Adicionar histórico de movimento
                     const refMov = doc(collection(db, 'movimentos'));
                     batch.set(refMov, {
                         tipo: 'ENTRADA',
@@ -654,6 +630,7 @@
                         lote: item.lote,
                         qtd: item.qtd,
                         und: item.und,
+                        isTeste: item.isTeste,
                         data: timestamp,
                         usuario: usuarioAtual.email
                     });
@@ -667,9 +644,7 @@
                 document.getElementById('form-entrada-item').reset();
                 document.getElementById('ent-data').valueAsDate = new Date();
 
-            } catch (error) {
-                showToast('Erro ao salvar entradas: ' + error.message, 'error');
-            }
+            } catch (error) { showToast('Erro ao salvar entradas: ' + error.message, 'error'); }
         });
 
         // --- SAÍDA MÚLTIPLA E BUSCA INTELIGENTE ---
@@ -681,12 +656,13 @@
             let total = 0;
             let und = '';
             estoque.forEach(l => {
-                if (l.nome === nomeItem && l.qtd > 0 && analisarValidade(l.validade).status !== 'BLOQUEADO') {
+                const analise = analisarValidade(l.validade, l.isTeste);
+                // Bloqueia tanto o vencimento próximo quanto itens em teste
+                if (l.nome === nomeItem && l.qtd > 0 && analise.status !== 'BLOQUEADO' && analise.status !== 'TESTE') {
                     total += Number(l.qtd);
                     und = l.und;
                 }
             });
-            // Subtrair o que já está na lista temporária
             const emLista = listaSaidaTemporaria.filter(i => i.nome === nomeItem).reduce((acc, i) => acc + i.qtd, 0);
             return { total: total - emLista, und };
         }
@@ -699,7 +675,7 @@
                     document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-green-600">Disponível: ${disp.total.toFixed(2)} ${disp.und}</span>`;
                     document.getElementById('sai-qtd').max = disp.total;
                 } else {
-                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado.</span>`;
+                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado. (Verifique itens retidos/bloqueados)</span>`;
                 }
             } else {
                 document.getElementById('sai-saldo-disp').innerHTML = '';
@@ -763,11 +739,10 @@
                 const batch = writeBatch(db);
                 const timestamp = new Date().toISOString();
                 
-                // Clonar o estoque atual em memória para manipulação segura das reduções dentro do loop
                 let estoqueTemp = JSON.parse(JSON.stringify(estoque));
 
                 for (let req of listaSaidaTemporaria) {
-                    let lotesItem = estoqueTemp.filter(l => l.nome === req.nome && l.qtd > 0 && analisarValidade(l.validade).status !== 'BLOQUEADO');
+                    let lotesItem = estoqueTemp.filter(l => l.nome === req.nome && l.qtd > 0 && analisarValidade(l.validade, l.isTeste).status !== 'BLOQUEADO' && analisarValidade(l.validade, l.isTeste).status !== 'TESTE');
                     lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade)); // PVPS
 
                     let qtdRestante = req.qtd;
@@ -778,19 +753,14 @@
                         
                         let retirar = Math.min(lote.qtd, qtdRestante);
                         qtdRestante -= retirar;
-                        lote.qtd -= retirar; // Atualiza no array temp
+                        lote.qtd -= retirar; 
                         
                         logBaixas.push({ lote: lote.lote, retirado: retirar });
-
-                        // Atualiza no banco
                         batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
                     }
 
-                    if (qtdRestante > 0) {
-                        throw new Error(`Estoque insuficiente modificado por outro usuário para ${req.nome}. Tente novamente.`);
-                    }
+                    if (qtdRestante > 0) throw new Error(`Estoque insuficiente modificado por outro usuário para ${req.nome}. Tente novamente.`);
 
-                    // Registra movimento de saída
                     batch.set(doc(collection(db, 'movimentos')), {
                         tipo: 'SAIDA',
                         nome: req.nome,
@@ -808,50 +778,122 @@
                 renderListaSaida();
                 revalidarSaldoSaida();
 
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
+            } catch (error) { showToast(error.message, 'error'); }
         });
 
-        // --- TABELA DE ESTOQUE ---
+        // --- TABELA DE ESTOQUE (AGRUPADA) ---
+        window.toggleRow = function(id) {
+            const row = document.getElementById('subrow-' + id);
+            const icon = document.getElementById('icon-' + id);
+            if(row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                icon.classList.replace('ph-caret-right', 'ph-caret-down');
+            } else {
+                row.classList.add('hidden');
+                icon.classList.replace('ph-caret-down', 'ph-caret-right');
+            }
+        }
+
+        window.liberarTeste = async function(loteId) {
+            if(!confirm("Tem certeza que deseja liberar este lote do status de Teste para Expedição?")) return;
+            try {
+                await updateDoc(doc(db, 'estoque', loteId), { isTeste: false });
+                showToast("Lote liberado para expedição!", "success");
+            } catch(error) { showToast('Erro ao liberar lote: ' + error.message, 'error'); }
+        }
+
         function renderTabelaEstoque() {
             const tbody = document.getElementById('tabela-estoque');
             tbody.innerHTML = '';
 
             let lotesAtivos = estoque.filter(l => l.qtd > 0);
-            lotesAtivos.sort((a, b) => new Date(a.validade) - new Date(b.validade));
-
             if (lotesAtivos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lote em estoque.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-500">Nenhum item em estoque.</td></tr>';
                 return;
             }
 
+            // Agrupar itens por NOME
+            let agrupado = {};
             lotesAtivos.forEach(l => {
-                const analise = analisarValidade(l.validade);
-                let badgeClass = ''; let icon = '';
-                if (analise.status === 'BLOQUEADO') { badgeClass = 'bg-red-100 text-red-800 border-red-200'; icon = 'ph-prohibit'; } 
-                else if (analise.status === 'ALERTA') { badgeClass = 'bg-yellow-100 text-yellow-800 border-yellow-200'; icon = 'ph-warning-circle'; } 
-                else { badgeClass = 'bg-green-100 text-green-800 border-green-200'; icon = 'ph-check-circle'; }
+                if(!agrupado[l.nome]) agrupado[l.nome] = { total: 0, und: l.und, lotes: [] };
+                agrupado[l.nome].total += Number(l.qtd);
+                agrupado[l.nome].lotes.push(l);
+            });
 
-                const valStr = new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+            // Ordenar por nome de item alfabético
+            const nomesOrdenados = Object.keys(agrupado).sort();
+            
+            let index = 0;
+            nomesOrdenados.forEach(nome => {
+                let item = agrupado[nome];
+                // Lotes do item ordenados por data de validade (PVPS)
+                item.lotes.sort((a, b) => new Date(a.validade) - new Date(b.validade));
+
+                let temTeste = item.lotes.some(l => l.isTeste);
+                let temBloqueado = item.lotes.some(l => !l.isTeste && analisarValidade(l.validade, false).diasRestantes <= 30);
+                
+                let rowId = `group-${index++}`;
+
+                // Linha Principal Consolidada
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100" onclick="window.toggleRow('${rowId}')">
+                        <td class="p-4 text-center text-brand-500"><i id="icon-${rowId}" class="ph ph-caret-right text-xl"></i></td>
+                        <td class="p-4 font-bold text-gray-800 text-lg">${nome}</td>
+                        <td class="p-4">
+                            <div class="flex flex-wrap gap-2">
+                                ${temTeste ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-purple-100 text-purple-800 uppercase border border-purple-200"><i class="ph ph-flask mr-1"></i> Contém Testes</span>' : ''}
+                                ${temBloqueado ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 uppercase border border-red-200"><i class="ph ph-prohibit mr-1"></i> Contém Bloqueados</span>' : ''}
+                                ${!temTeste && !temBloqueado ? '<span class="px-2 py-1 text-[10px] font-bold rounded bg-green-50 text-green-600 uppercase border border-green-100">Livre</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="p-4 text-right font-bold text-gray-800 text-xl">
+                            ${item.total.toFixed(2)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
+                        </td>
+                    </tr>
+                `;
+
+                // Sub-linha de Lotes Expandida (Hidden by default)
+                let subTbody = '';
+                item.lotes.forEach(l => {
+                    const analise = analisarValidade(l.validade, l.isTeste);
+                    let badgeClass = ''; let icon = '';
+                    if (analise.status === 'TESTE') { badgeClass = 'bg-purple-100 text-purple-800 border-purple-200'; icon = 'ph-flask'; }
+                    else if (analise.status === 'BLOQUEADO') { badgeClass = 'bg-red-100 text-red-800 border-red-200'; icon = 'ph-prohibit'; } 
+                    else if (analise.status === 'ALERTA') { badgeClass = 'bg-yellow-100 text-yellow-800 border-yellow-200'; icon = 'ph-warning-circle'; } 
+                    else { badgeClass = 'bg-green-100 text-green-800 border-green-200'; icon = 'ph-check-circle'; }
+
+                    const valStr = new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                    
+                    let btnLiberar = analise.status === 'TESTE' ? 
+                        `<button onclick="window.liberarTeste('${l.id}')" class="text-xs bg-purple-600 hover:bg-purple-700 text-white py-1.5 px-3 rounded font-medium shadow-sm flex items-center transition-colors"><i class="ph ph-check mr-1 text-sm"></i> Liberar CQ</button>` : '';
+
+                    subTbody += `
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-white transition-colors">
+                            <td class="py-3 px-4 w-32">
+                                <span class="px-2 py-1 text-[10px] font-bold rounded-md border flex items-center w-max ${badgeClass}">
+                                    <i class="ph ${icon} mr-1"></i> ${analise.status}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-600">Lote: <strong class="text-gray-800">${l.lote}</strong></td>
+                            <td class="py-3 px-4 text-sm text-gray-600">Vencimento: <strong>${valStr}</strong> <span class="text-xs ${analise.diasRestantes <= 35 && !l.isTeste ? 'text-red-500 font-bold' : 'text-gray-400'} ml-1">(${analise.diasRestantes} dias)</span></td>
+                            <td class="py-3 px-4 text-sm font-bold text-right">${Number(l.qtd).toFixed(2)}</td>
+                            <td class="py-3 px-4 text-right flex justify-end">${btnLiberar}</td>
+                        </tr>
+                    `;
+                });
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="p-4">
-                            <span class="px-2 py-1 text-xs font-bold rounded-md border flex inline-flex items-center w-max ${badgeClass}">
-                                <i class="ph ${icon} mr-1"></i> ${analise.status}
-                            </span>
-                        </td>
-                        <td class="p-4 font-medium text-gray-800">${l.nome}</td>
-                        <td class="p-4 text-gray-600">${l.lote}</td>
-                        <td class="p-4 text-gray-600">${valStr}</td>
-                        <td class="p-4">
-                            <span class="font-medium ${analise.diasRestantes <= 30 ? 'text-red-500' : (analise.diasRestantes <= 35 ? 'text-yellow-500' : 'text-gray-600')}">
-                                ${analise.diasRestantes} dias
-                            </span>
-                        </td>
-                        <td class="p-4 text-right font-bold text-gray-800 text-lg">
-                            ${Number(l.qtd).toFixed(2)} <span class="text-xs text-gray-500 font-normal">${l.und}</span>
+                    <tr id="subrow-${rowId}" class="hidden bg-gray-50 shadow-inner">
+                        <td colspan="4" class="p-0">
+                            <div class="px-8 py-4 bg-gray-50">
+                                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                                    <table class="w-full text-left">
+                                        <tbody class="divide-y divide-gray-100">
+                                            ${subTbody}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 `;
