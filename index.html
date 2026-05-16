@@ -1,1049 +1,882 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark" style="color-scheme: dark;">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Expedição OS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Expedição</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'] },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        ios: { bg: '#000000', card: '#1c1c1e', cardHover: '#2c2c2e', blue: '#0a84ff', green: '#30d158', red: '#ff453a', orange: '#ff9f0a', text: '#ffffff', textMuted: 'rgba(235, 235, 245, 0.6)', border: '#38383a', input: '#2c2c2e' }
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            800: '#92400e',
+                        }
                     }
                 }
             }
         }
     </script>
-    
-    <style type="text/tailwindcss">
-        @layer components {
-            body { @apply bg-ios-bg text-ios-text font-sans antialiased; }
-            .card { @apply bg-ios-card p-4 sm:p-6 rounded-2xl shadow-sm border border-ios-border; }
-            .title-lg { @apply text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6 tracking-tight; }
-            .title-md { @apply text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 tracking-tight; }
-            .form-label { @apply block text-sm font-medium text-ios-textMuted mb-1; }
-            .form-input { @apply block w-full bg-ios-input text-white rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-ios-blue transition-all border border-ios-border/50; }
-            .btn-primary { @apply bg-ios-blue hover:opacity-90 text-white font-semibold py-3 px-5 rounded-xl transition-all flex items-center justify-center; }
-            .btn-secondary { @apply bg-ios-cardHover hover:bg-gray-700 text-white font-semibold py-3 px-5 rounded-xl transition-all border border-ios-border flex items-center justify-center; }
-            .table-container { @apply overflow-x-auto rounded-xl border border-ios-border bg-ios-card w-full; }
-            .base-table { @apply min-w-full w-full text-sm text-left text-ios-textMuted; }
-            .base-thead { @apply text-xs uppercase bg-ios-cardHover text-gray-400 border-b border-ios-border sticky top-0 z-10 shadow-sm; }
-            .base-tr { @apply border-b border-ios-border hover:bg-ios-cardHover transition-colors; }
-            .base-th { @apply px-4 sm:px-5 py-3 sm:py-4 font-semibold whitespace-nowrap bg-ios-cardHover; }
-            .base-td { @apply px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap sm:whitespace-normal; }
-            .badge { @apply text-xs font-semibold px-2 py-1 rounded-md; }
-            .nav-item { @apply flex items-center p-3 text-ios-textMuted rounded-xl hover:bg-ios-cardHover hover:text-white transition-all cursor-pointer font-medium mb-1; }
-            .nav-item.active { @apply bg-ios-blue/10 text-ios-blue font-bold; }
-            .nav-item-mobile { @apply flex flex-col items-center justify-center w-full h-full text-ios-textMuted transition-colors cursor-pointer; }
-            .nav-item-mobile.active { @apply text-ios-blue; }
-        }
-    </style>
     <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: #636366; }
-        .modal { display: none; position: fixed; z-index: 50; inset: 0; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 1rem; }
-        .modal-content { background-color: #1c1c1e; border: 1px solid #38383a; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 1.5rem; width: 100%; max-height: 90vh; overflow-y: auto; }
+        body { background-color: #f8fafc; }
+        .sidebar-active { background-color: #fffbeb; color: #d97706; border-right: 4px solid #f59e0b; font-weight: 600; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Loading Overlay */
+        #loader { transition: opacity 0.3s ease; }
     </style>
 </head>
-<body class="overflow-hidden">
+<body class="flex h-screen overflow-hidden text-gray-800 font-sans">
 
-    <div id="notification-modal" class="hidden"></div>
-    <div id="loading-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999999] flex flex-col justify-center items-center hidden"><div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ios-blue mb-4"></div><p class="text-white font-medium animate-pulse">Sincronizando Expedição...</p></div>
+    <!-- Loading / Auth Check Overlay -->
+    <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <i class="ph ph-spinner-gap animate-spin text-4xl text-brand-500 mb-4"></i>
+        <p class="text-gray-500 font-medium">Conectando ao sistema...</p>
+    </div>
 
-    <!-- Login -->
-    <div id="login-wrapper" class="min-h-screen flex items-center justify-center p-4 bg-black relative overflow-hidden">
-        <div class="absolute inset-0 z-0 opacity-20"><div class="absolute top-1/4 left-1/4 w-96 h-96 bg-ios-blue rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div><div class="absolute top-1/3 right-1/4 w-96 h-96 bg-ios-orange rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div></div>
-        <div class="card max-w-md w-full relative z-10 border border-ios-border/50 bg-ios-card/80 backdrop-blur-xl">
-            <div class="text-center mb-8"><div class="w-20 h-20 bg-ios-blue/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-ios-blue/30"><i class="fa-solid fa-truck-fast text-4xl text-ios-blue"></i></div><h1 class="text-3xl font-bold text-white tracking-tight">Expedição OS</h1><p class="text-ios-textMuted mt-2">Controle de Saídas e Entregas</p></div>
-            <div class="space-y-4"><button id="btn-login-google" class="w-full bg-white text-black font-bold py-3 px-4 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors"><i class="fa-brands fa-google mr-3"></i>Entrar com Google</button><div class="relative flex py-2 items-center"><div class="flex-grow border-t border-ios-border"></div><span class="flex-shrink-0 mx-4 text-ios-textMuted text-xs">ou</span><div class="flex-grow border-t border-ios-border"></div></div><button id="btn-bypass-login" class="btn-secondary w-full">Acesso Rápido (Sem Login)</button></div>
-            <div id="mensagem-erro" class="hidden mt-4 p-3 bg-ios-red/10 border border-ios-red/30 text-ios-red rounded-lg text-sm text-center font-medium"></div>
+    <!-- Login View -->
+    <div id="login-view" class="hidden fixed inset-0 bg-gray-50 z-40 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center border border-gray-100">
+            <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="ph-fill ph-package text-brand-500 text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Expedição PRO</h1>
+            <p class="text-gray-500 text-sm mb-8">Faça login para gerenciar o estoque e as expedições.</p>
+            
+            <button id="btn-login" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors flex items-center justify-center">
+                <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Entrar com Google
+            </button>
         </div>
     </div>
 
-    <!-- App -->
-    <div id="app-wrapper" class="hidden h-screen flex flex-col md:flex-row">
-        <!-- Sidebar Desktop -->
-        <aside class="hidden md:flex flex-col w-64 bg-ios-card border-r border-ios-border fixed h-full z-40 sidebar">
-            <div class="p-6 border-b border-ios-border flex items-center gap-3"><i class="fa-solid fa-truck-fast text-3xl text-ios-blue"></i><div><h2 class="text-lg font-bold text-white leading-tight">Expedição</h2><p class="text-xs text-ios-textMuted" id="nome-usuario">Usuário</p></div></div>
-            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-                <div class="nav-item active nav-btn" data-target="home"><i class="fa-solid fa-house w-6 text-center mr-2"></i>Início</div>
-                <div class="nav-item nav-btn" data-target="receive"><i class="fa-solid fa-dolly w-6 text-center mr-3 text-ios-green"></i>Receber OPs</div>
-                <div class="nav-item nav-btn" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center mr-3 text-ios-blue"></i>Estoque Atual</div>
-                <div class="nav-item nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box w-6 text-center mr-3 text-ios-orange"></i>Saídas / Entregas</div>
-                <div class="nav-item nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-3 text-ios-blue"></i>Histórico Entradas</div>
-                <div class="nav-item nav-btn" data-target="config"><i class="fa-solid fa-gear w-6 text-center mr-2"></i>Config. Rendimentos</div>
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-10">
+            <div class="h-16 flex items-center px-6 border-b border-gray-100">
+                <i class="ph-fill ph-package text-brand-500 text-2xl mr-2"></i>
+                <h1 class="text-lg font-bold text-gray-900">Expedição PRO</h1>
+            </div>
+            
+            <nav class="flex-1 py-4 space-y-1">
+                <button onclick="window.navigate('dashboard')" id="nav-dashboard" class="sidebar-active w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="ph ph-squares-four text-lg mr-3"></i> Painel Inicial
+                </button>
+                <button onclick="window.navigate('entrada')" id="nav-entrada" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="ph ph-box-arrow-down text-lg mr-3"></i> Entrada de Lote
+                </button>
+                <button onclick="window.navigate('saida')" id="nav-saida" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="ph ph-box-arrow-up text-lg mr-3"></i> Saída (PVPS)
+                </button>
+                <button onclick="window.navigate('estoque')" id="nav-estoque" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="ph ph-stack text-lg mr-3"></i> Saldo e Alertas
+                </button>
             </nav>
-            <div class="p-4 border-t border-ios-border"><button id="btn-sair" class="nav-item w-full text-ios-red hover:bg-ios-red/10 hover:text-ios-red justify-start"><i class="fa-solid fa-right-from-bracket w-6 text-center mr-2"></i>Sair</button></div>
+
+            <div class="p-4 border-t border-gray-100">
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div class="flex items-center overflow-hidden">
+                        <img id="user-avatar" src="" class="w-8 h-8 rounded-full mr-2 bg-gray-200 hidden">
+                        <i id="user-icon-fallback" class="ph ph-user-circle text-2xl mr-2"></i>
+                        <div class="truncate">
+                            <p id="user-name" class="font-medium text-gray-800 truncate">Usuário</p>
+                            <p class="text-xs">Auditor</p>
+                        </div>
+                    </div>
+                    <button id="btn-logout" class="text-gray-400 hover:text-red-500 ml-2" title="Sair">
+                        <i class="ph ph-sign-out text-lg"></i>
+                    </button>
+                </div>
+            </div>
         </aside>
 
-        <!-- Bottom Nav Mobile -->
-        <nav id="mobile-nav" class="md:hidden fixed bottom-0 w-full bg-ios-card/90 backdrop-blur-xl border-t border-ios-border z-50 flex justify-around items-center h-20 pb-safe">
-            <div class="nav-item-mobile active nav-btn" data-target="home"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px] font-medium">Início</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="receive"><i class="fa-solid fa-dolly text-xl mb-1 text-ios-green"></i><span class="text-[10px] font-medium">Entrada</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="inventory"><i class="fa-solid fa-boxes-stacked text-xl mb-1 text-ios-blue"></i><span class="text-[10px] font-medium">Estoque</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="outbound"><i class="fa-solid fa-truck-ramp-box text-xl mb-1 text-ios-orange"></i><span class="text-[10px] font-medium">Saída</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="history"><i class="fa-solid fa-clock-rotate-left text-xl mb-1 text-ios-blue"></i><span class="text-[10px] font-medium">Histórico</span></div>
-            <div class="nav-item-mobile nav-btn" data-target="config"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-medium">Config</span></div>
-        </nav>
-
-        <main class="flex-1 overflow-y-auto p-4 sm:p-8 md:ml-64 pb-24 md:pb-8 relative">
-            
-            <div class="bg-ios-blue/20 border border-ios-blue/30 p-3 rounded-lg flex items-center justify-between mb-4 shadow-sm">
-                <span class="text-ios-blue text-sm font-semibold"><i class="fa-solid fa-bolt mr-2"></i>Modo Econômico de Dados Ativado (Apenas últimos 7 dias sincronizados)</span>
-                <button type="button" class="btn-primary py-1.5 px-3 text-xs" onclick="refreshData(true)"><i class="fa-solid fa-rotate mr-2"></i>Forçar Atualização</button>
-            </div>
-
-            <!-- HOME -->
-            <div id="screen-home" class="screen-panel block">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-truck-fast mr-3 text-ios-blue"></i>Dashboard Expedição</h1>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="card bg-ios-blue/10 border-ios-blue/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">OPs Pendentes (7 dias)</p><p class="text-4xl text-ios-blue font-mono font-bold" id="dash-pendentes">0</p></div>
-                    <div class="card bg-ios-green/10 border-ios-green/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">Recebidas (Hoje)</p><p class="text-4xl text-ios-green font-mono font-bold" id="dash-recebidas">0</p></div>
-                    <div class="card bg-ios-red/10 border-ios-red/30 text-center"><p class="text-ios-textMuted text-sm font-bold uppercase mb-2">Divergências (Hoje)</p><p class="text-4xl text-ios-red font-mono font-bold" id="dash-divergencias">0</p></div>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            <!-- Top Header -->
+            <header class="h-16 bg-white flex items-center justify-between px-8 shadow-sm z-0">
+                <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-sm font-medium flex items-center border border-brand-200 shadow-sm">
+                        <i class="ph-fill ph-lightning mr-1"></i> Nuvem Sincronizada
+                    </span>
                 </div>
-            </div>
+            </header>
 
-            <!-- RECEBIMENTO -->
-            <div id="screen-receive" class="screen-panel hidden">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-dolly text-ios-green mr-3"></i>Entrada de OPs (Estoque -> Expedição)</h1>
-                <div class="card mb-6">
-                    <p class="text-sm text-ios-textMuted mb-4">Selecione uma data para filtrar as OPs concluídas.</p>
-                    <div class="flex gap-2 mb-4">
-                        <input type="date" id="ops-date-filter" class="form-input w-48 text-sm py-1.5" onchange="renderOpsPendentes()">
-                        <input type="text" id="search-ops" class="form-input w-full" placeholder="Buscar OP ou Produto...">
-                    </div>
-                    <div class="table-container max-h-[600px] overflow-y-auto">
-                        <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th">OP</th>
-                                    <th class="base-th">Produto Final</th>
-                                    <th class="base-th text-center">Lotes Apontados</th>
-                                    <th class="base-th text-center">Data</th>
-                                    <th class="base-th text-center">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ops-pendentes-body" class="divide-y divide-ios-border/50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- HISTORICO -->
-            <div id="screen-history" class="screen-panel hidden">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-clock-rotate-left mr-3 text-ios-blue"></i>Histórico de Recebimentos</h1>
-                <div class="card p-0 bg-transparent border-none">
-                    <div class="flex justify-between mb-4 mt-2">
-                        <input type="date" id="hist-date-filter" class="form-input w-48 text-sm py-1.5" onchange="renderHistory()">
-                        <button type="button" id="btn-export-hist" class="btn-secondary text-[10px] py-1.5 px-3"><i class="fa-solid fa-file-excel mr-2 text-ios-green"></i>Exportar Excel</button>
-                    </div>
-                    <div class="table-container max-h-[600px] overflow-y-auto">
-                        <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th">Data/Hora</th>
-                                    <th class="base-th">Produto</th>
-                                    <th class="base-th text-center">Lote</th>
-                                    <th class="base-th text-right">Qtd Esperada</th>
-                                    <th class="base-th text-right text-ios-blue">Qtd Recebida</th>
-                                    <th class="base-th text-center">Divergência</th>
-                                    <th class="base-th text-center">OP Ref.</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-body" class="divide-y divide-ios-border/50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ESTOQUE ATUAL -->
-            <div id="screen-inventory" class="screen-panel hidden">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-boxes-stacked text-ios-blue mr-3"></i>Controle de Estoque (Expedição)</h1>
-                <div class="card mb-6">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <input type="text" id="search-inventory" class="form-input w-full md:w-64" placeholder="Buscar produto...">
-                        </div>
-                        <div class="text-sm text-ios-textMuted bg-ios-bg px-3 py-1.5 rounded-lg border border-ios-border"><i class="fa-solid fa-circle-info mr-2"></i>Sugestão Média: Garantia de <span class="font-bold text-white">3</span> dias</div>
-                    </div>
-                    <div class="table-container max-h-[600px] overflow-y-auto">
-                        <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th">Produto</th>
-                                    <th class="base-th text-center">Físico Atual</th>
-                                    <th class="base-th text-center">Mín/Máx</th>
-                                    <th class="base-th text-center">Saída Dia (Teórica)</th>
-                                    <th class="base-th text-center">Saída Dia (Real 30d)</th>
-                                    <th class="base-th text-center text-ios-orange">Sugestão (Mínimo)</th>
-                                    <th class="base-th text-center text-ios-blue">Sugestão (Média)</th>
-                                    <th class="base-th text-center">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-body" class="divide-y divide-ios-border/50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SAÍDAS / ENTREGAS -->
-            <div id="screen-outbound" class="screen-panel hidden">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-truck-ramp-box text-ios-orange mr-3"></i>Registro de Saídas (Entregas)</h1>
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-8" id="main-container">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="col-span-1">
-                        <div class="card">
-                            <h2 class="title-md mb-4 text-white">Nova Saída</h2>
-                            <form id="outbound-form" class="space-y-4">
-                                <div class="border-t border-ios-border pt-4">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h3 class="title-md text-sm text-ios-textMuted">Itens Expedidos</h3>
-                                        <span class="text-[10px] bg-ios-orange/20 text-ios-orange font-bold px-2 py-1 rounded">Baixa automática PVPS</span>
-                                    </div>
-                                    <div id="outbound-items-container" class="space-y-3 mb-4"></div>
-                                    <button type="button" id="add-outbound-item-btn" class="text-ios-blue bg-ios-bg px-3 py-2 rounded-lg border border-ios-border text-sm w-full font-semibold"><i class="fa-solid fa-plus mr-2"></i>Adicionar Item</button>
-                                </div>
-                                <button type="submit" class="btn-primary w-full mt-2 py-3"><i class="fa-solid fa-truck-fast mr-2"></i>Finalizar Saída</button>
-                            </form>
+                <!-- Datalist para Autocomplete -->
+                <datalist id="estoque-itens-list"></datalist>
+
+                <!-- VIEW: DASHBOARD -->
+                <div id="view-dashboard" class="space-y-6 block">
+                    <!-- Info Card -->
+                    <div class="bg-brand-50 border border-brand-200 rounded-xl p-6 flex justify-between items-center shadow-sm">
+                        <div class="flex items-start">
+                            <div class="bg-white p-3 rounded-lg shadow-sm mr-4 border border-brand-100">
+                                <i class="ph ph-book-open text-brand-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">Saúde do Estoque</h3>
+                                <p class="text-sm text-brand-800 mt-1">Status atualizado com base na regra de 30 dias para expedição.</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span id="dash-health-percent" class="text-3xl font-bold text-brand-600">--%</span>
+                            <p class="text-xs font-medium text-brand-800 mt-1 uppercase">Itens Liberados</p>
                         </div>
                     </div>
-                    <div class="col-span-1">
-                        <div class="card h-full">
+
+                    <!-- Grid de Métricas -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="title-md mb-0 text-white">Últimas Saídas</h2>
-                                <input type="date" id="out-date-filter" class="form-input w-40 text-sm py-1.5" onchange="renderOutboundHistory()">
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Total em Estoque</h4>
+                                <i class="ph ph-stack text-gray-400 text-xl"></i>
                             </div>
-                            <div class="table-container max-h-[500px] overflow-y-auto">
-                                <table class="base-table">
-                                    <thead class="base-thead">
-                                        <tr>
-                                            <th class="base-th">Data</th>
-                                            <th class="base-th">Produto</th>
-                                            <th class="base-th text-center">Lotes (PVPS)</th>
-                                            <th class="base-th text-right">Qtd</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="outbound-history-body" class="divide-y divide-ios-border/50"></tbody>
-                                </table>
+                            <p id="dash-total-items" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-2 h-full bg-yellow-400"></div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Alerta (Vence < 35 dias)</h4>
+                                <i class="ph ph-warning-circle text-yellow-500 text-xl"></i>
                             </div>
+                            <p id="dash-alert-items" class="text-2xl font-bold text-gray-800">0</p>
+                            <p class="text-xs text-gray-500 mt-2">Atenção para expedição em breve</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-2 h-full bg-red-500"></div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-sm font-bold text-gray-500 uppercase">Bloqueados (Vence < 30 dias)</h4>
+                                <i class="ph ph-prohibit text-red-500 text-xl"></i>
+                            </div>
+                            <p id="dash-blocked-items" class="text-2xl font-bold text-gray-800">0</p>
+                            <p class="text-xs text-gray-500 mt-2">Não podem ir para as lojas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                         <h4 class="font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                            <i class="ph ph-chart-line-up mr-2 text-brand-500"></i> Média de Saída por Item (Últimos 30 dias)
+                         </h4>
+                         <div id="dash-medias" class="text-sm text-gray-600">Carregando dados...</div>
+                    </div>
+                </div>
+
+                <!-- VIEW: ENTRADA -->
+                <div id="view-entrada" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="ph ph-plus-circle text-brand-500 mr-2 text-xl"></i> Adicionar Itens à Entrada
+                        </h3>
+                        <form id="form-entrada-item" class="space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nome do Item</label>
+                                    <input list="estoque-itens-list" id="ent-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Digite ou selecione um item...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Data de Entrada</label>
+                                    <input type="date" id="ent-data" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lote</label>
+                                    <input type="text" id="ent-lote" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Lote do fabricante">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
+                                    <input type="number" step="0.01" id="ent-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unidade</label>
+                                    <select id="ent-und" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                        <option value="und">Unidade (und)</option>
+                                        <option value="kg">Quilograma (kg)</option>
+                                        <option value="cx">Caixa (cx)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Data de Validade</label>
+                                    <input type="date" id="ent-validade" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                </div>
+                            </div>
+
+                            <div class="pt-2 text-right">
+                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center">
+                                    <i class="ph ph-plus mr-2"></i> Incluir na Lista
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Entrada -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto hidden" id="box-lista-entrada">
+                        <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">Itens Prontos para Registro</h4>
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="text-gray-500 border-b">
+                                        <th class="py-2">Item</th>
+                                        <th class="py-2">Lote</th>
+                                        <th class="py-2">Validade</th>
+                                        <th class="py-2 text-right">Qtd</th>
+                                        <th class="py-2 text-center">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-lista-entrada" class="divide-y divide-gray-50"></tbody>
+                            </table>
+                        </div>
+                        <button id="btn-salvar-entradas" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                            <i class="ph ph-check-circle mr-2 text-xl"></i> Salvar Todas as Entradas no Banco
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW: SAIDA -->
+                <div id="view-saida" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                        <div class="bg-brand-50 text-brand-800 p-4 rounded-lg mb-6 border border-brand-200 text-sm">
+                            <i class="ph-fill ph-info mr-1"></i> <strong>Atenção PVPS:</strong> O sistema dará baixa automaticamente nos lotes com a data de validade mais próxima. Lotes a menos de 30 dias do vencimento estão bloqueados.
+                        </div>
+                        
+                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="ph ph-minus-circle text-red-500 mr-2 text-xl"></i> Adicionar Itens à Saída
+                        </h3>
+                        <form id="form-saida-item" class="space-y-5">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Buscar Item</label>
+                                    <input list="estoque-itens-list" id="sai-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="Digite para buscar...">
+                                    <p id="sai-saldo-disp" class="text-xs text-gray-500 mt-1 font-medium min-h-[16px]"></p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade a Retirar</label>
+                                    <input type="number" step="0.01" id="sai-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
+                                </div>
+                            </div>
+
+                            <div class="pt-2 text-right">
+                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center">
+                                    <i class="ph ph-plus mr-2"></i> Incluir na Lista de Saída
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Saída -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto hidden" id="box-lista-saida">
+                        <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">Itens Prontos para Retirada (PVPS)</h4>
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="text-gray-500 border-b">
+                                        <th class="py-2">Item</th>
+                                        <th class="py-2 text-right">Qtd Solicitada</th>
+                                        <th class="py-2 text-center">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-lista-saida" class="divide-y divide-gray-50"></tbody>
+                            </table>
+                        </div>
+                        <button id="btn-salvar-saidas" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
+                            <i class="ph ph-sign-out mr-2 text-xl"></i> Processar Todas as Saídas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW: ESTOQUE (SALDO) -->
+                <div id="view-estoque" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 class="font-bold text-gray-800">Saldo por Lote e Status de Validade</h3>
+                            <div class="flex space-x-4 text-xs font-medium">
+                                <span class="flex items-center text-green-600"><div class="w-3 h-3 rounded-full bg-green-500 mr-1"></div> Liberado</span>
+                                <span class="flex items-center text-yellow-600"><div class="w-3 h-3 rounded-full bg-yellow-400 mr-1"></div> Alerta ( < 35d )</span>
+                                <span class="flex items-center text-red-600"><div class="w-3 h-3 rounded-full bg-red-500 mr-1"></div> Bloqueado ( < 30d )</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-white border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
+                                        <th class="p-4 font-bold">Status</th>
+                                        <th class="p-4 font-bold">Item</th>
+                                        <th class="p-4 font-bold">Lote</th>
+                                        <th class="p-4 font-bold">Validade</th>
+                                        <th class="p-4 font-bold">Dias Restantes</th>
+                                        <th class="p-4 font-bold text-right">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-estoque" class="text-sm divide-y divide-gray-50">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- CONFIG -->
-            <div id="screen-config" class="screen-panel hidden max-w-5xl mx-auto">
-                <h1 class="title-lg mb-6 text-white"><i class="fa-solid fa-gear mr-3 text-ios-orange"></i>Configuração de Rendimentos</h1>
-                <div class="card mb-6">
-                    <div class="bg-ios-orange/10 border border-ios-orange/30 p-4 rounded-xl mb-6 flex gap-4">
-                        <i class="fa-solid fa-circle-info text-2xl text-ios-orange"></i>
-                        <div>
-                            <h3 class="font-bold text-ios-orange mb-1">Como funciona a conversão?</h3>
-                            <p class="text-sm text-ios-textMuted">O estoque aponta as Ordens de Produção baseadas em um <b>Multiplicador (Lotes)</b> (ex: 2 lotes). A expedição precisa saber quanto "1 Lote Inteiro" deve gerar de forma física. Configure abaixo se o produto final é medido em Peso (KG) ou Unidade (UN) e qual a quantidade que 1 Lote padrão gera.</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mb-4"><input type="text" id="search-config" class="form-input" placeholder="Buscar Produto Final..."></div>
-                    <div class="table-container max-h-[600px] overflow-y-auto">
-                        <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th">Produto Final</th>
-                                    <th class="base-th text-center">Controle Expedição</th>
-                                    <th class="base-th text-center" title="Quanto rende 1 Lote Padrão?">Rend. Teórico (1 Lote)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="config-body" class="divide-y divide-ios-border/50"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
-
         </main>
     </div>
 
-    <!-- Modal Inventory Config -->
-    <div id="inventory-config-modal" class="modal z-[6000]">
-        <div class="modal-content max-w-sm">
-            <h2 class="title-md mb-2 text-ios-blue"><i class="fa-solid fa-sliders mr-2"></i>Limites e Metas</h2>
-            <p class="text-sm text-ios-textMuted mb-4 border-b border-ios-border pb-4" id="inv-cfg-name">-</p>
-            <form id="inventory-config-form" class="space-y-4">
-                <input type="hidden" id="inv-cfg-id">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="form-label">Estoque Mínimo</label>
-                        <input type="number" step="0.01" min="0" id="inv-cfg-min" class="form-input text-sm py-2">
-                    </div>
-                    <div>
-                        <label class="form-label">Estoque Máximo</label>
-                        <input type="number" step="0.01" min="0" id="inv-cfg-max" class="form-input text-sm py-2">
-                    </div>
-                </div>
-                <div>
-                    <label class="form-label">Saída Teórica Diária</label>
-                    <input type="number" step="0.01" min="0" id="inv-cfg-theoretical" class="form-input text-sm py-2">
-                </div>
-                <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-ios-border">
-                    <button type="button" class="btn-secondary close-modal" data-target="inventory-config-modal">Cancelar</button>
-                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save mr-2"></i>Salvar</button>
-                </div>
-            </form>
-        </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow border border-gray-100" role="alert">
+        <div id="toast-icon" class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg"></div>
+        <div id="toast-msg" class="ml-3 text-sm font-normal pr-2"></div>
     </div>
 
-    <!-- Modal Recebimento -->
-    <div id="receive-modal" class="modal z-[6000]">
-        <div class="modal-content max-w-md">
-            <h2 class="title-md mb-2 text-ios-blue"><i class="fa-solid fa-dolly mr-2"></i>Receber Produto</h2>
-            <p class="text-sm text-ios-textMuted mb-4 border-b border-ios-border pb-4" id="recv-product-name">-</p>
-            
-            <form id="receive-form" class="space-y-4">
-                <input type="hidden" id="recv-op-id">
-                <input type="hidden" id="recv-product-id">
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-ios-bg border border-ios-border p-3 rounded-xl">
-                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Qtd. Teórica Esperada</label>
-                        <div class="flex items-end gap-2">
-                            <input type="text" id="recv-expected" readonly class="form-input bg-transparent border-none text-white font-bold text-2xl px-0 py-0 cursor-not-allowed">
-                            <span class="text-ios-textMuted font-bold mb-1 recv-unit">UN</span>
-                        </div>
-                    </div>
-                    <div class="bg-ios-bg border border-ios-blue p-3 rounded-xl relative">
-                        <label class="form-label text-[10px] uppercase font-bold text-ios-blue">Qtd. Real Recebida</label>
-                        <div class="flex items-end gap-2">
-                            <input type="number" id="recv-actual" step="0.001" min="0" required class="form-input bg-transparent border-none text-ios-blue font-bold text-2xl px-0 py-0 focus:ring-0">
-                            <span class="text-ios-blue font-bold mb-1 recv-unit">UN</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Lote / Fab.</label>
-                        <input type="text" id="recv-lote" required class="form-input text-sm py-2 border-ios-border bg-ios-bg" placeholder="Ex: L1234">
-                    </div>
-                    <div>
-                        <label class="form-label text-[10px] uppercase font-bold text-ios-textMuted">Validade</label>
-                        <input type="date" id="recv-validade" required class="form-input text-sm py-2 border-ios-border bg-ios-bg">
-                    </div>
-                </div>
-                
-                <div class="bg-ios-bg border border-dashed border-ios-border rounded-xl p-3 flex justify-between items-center mt-2" id="recv-divergence-box">
-                    <span class="text-sm font-semibold text-ios-textMuted">Divergência:</span>
-                    <span id="recv-divergence" class="font-bold text-xl text-white">0.00</span>
-                </div>
-                
-                <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-ios-border">
-                    <button type="button" class="btn-secondary close-modal" data-target="receive-modal">Cancelar</button>
-                    <button type="submit" class="btn-primary"><i class="fa-solid fa-check mr-2"></i>Confirmar Entrada</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Scripts do Firebase e Lógica -->
     <script type="module">
-        const id=n=>document.getElementById(n), show=e=>{if(e){e.style.display='flex';e.classList.remove('hidden');}}, hide=e=>{if(e){e.style.display='none';e.classList.add('hidden');}}, addEvt=(e,t,f)=>{const el=id(e);if(el)el.addEventListener(t,f);};
-        window.showNotif=(m,e=false)=>{const el=id('notification-modal');if(!el)return;el.innerHTML=e?`<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${m}`:`<i class="fa-solid fa-check mr-2"></i> ${m}`;el.className=`fixed top-6 left-1/2 transform -translate-x-1/2 z-[9999999] py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md w-max max-w-[90vw] text-center ${e?'bg-ios-red/95':'bg-ios-green/95'}`;show(el);setTimeout(()=>hide(el),4000);};
-        
-        document.querySelectorAll('.close-modal').forEach(b => b.addEventListener('click', e => { hide(id(e.currentTarget.dataset.target)); }));
+        // Import Firebase SDK (Versão 11.6.1 compatível com Canvas/Modern JS)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', e => {
-                const t = e.currentTarget.dataset.target;
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll(`.nav-btn[data-target="${t}"]`).forEach(b => b.classList.add('active'));
-                document.querySelectorAll('.screen-panel').forEach(s => hide(s));
-                show(id(`screen-${t}`));
-                if(t === 'config') renderConfig();
-            });
-        });
-
-        // Firebase Setup (MESMO DO ESTOQUE PARA COMPARTILHAR DADOS)
-        import{initializeApp}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut,signInAnonymously,signInWithCustomToken}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-        import{getFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,query,where}from"https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-        const isCanvas = typeof __firebase_config !== 'undefined';
-        const fC = isCanvas ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8",
-            authDomain: "estoque-b50df.firebaseapp.com",
-            projectId: "estoque-b50df",
-            storageBucket: "estoque-b50df.firebasestorage.app",
-            messagingSenderId: "634756791567",
-            appId: "1:634756791567:web:993e61243b57b7e057d27a"
+        // Configuração Firebase fornecida
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8qJQ-qTQGEWo1iA_NW_3VY-18jVOZxbM",
+            authDomain: "expedicao-8d1f0.firebaseapp.com",
+            projectId: "expedicao-8d1f0",
+            storageBucket: "expedicao-8d1f0.firebasestorage.app",
+            messagingSenderId: "247941256162",
+            appId: "1:247941256162:web:0904e8b7a404e9f1bd9fbb",
+            measurementId: "G-85736YNKR7"
         };
 
-        const app = initializeApp(fC);
+        // Init Firebase
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        let masterDbUid = null;
+        // --- ESTADO DA APLICAÇÃO ---
+        let usuarioAtual = null;
+        let estoque = [];
+        let movimentos = [];
+        let listaEntradaTemporaria = [];
+        let listaSaidaTemporaria = [];
+        let unsubEstoque = null;
+        let unsubMovimentos = null;
 
-        const getCol = (c) => {
-            const uid = masterDbUid || auth.currentUser?.uid || 'unknown_user';
-            return isCanvas ? collection(db, 'artifacts', appId, 'users', uid, c) : collection(db, 'users', uid, c);
-        };
-        const getDocRef = (c, i) => {
-            const uid = masterDbUid || auth.currentUser?.uid || 'unknown_user';
-            return isCanvas ? doc(db, 'artifacts', appId, 'users', uid, c, i) : doc(db, 'users', uid, c, i);
-        };
+        // Definindo inputs de data inicial
+        document.getElementById('ent-data').valueAsDate = new Date();
 
-        const DB = {
-            add: async (c, d) => { const r = await addDoc(getCol(c), d); await setDoc(r, { id: r.id }, { merge: true }); return r.id; },
-            update: async (c, d) => { if (d.id) await setDoc(getDocRef(c, d.id), d, { merge: true }); },
-            get: async (c, i) => { if (!i) return null; const s = await getDoc(getDocRef(c, i)); return s.exists() ? s.data() : null; },
-            getAll: async (c, constraints = []) => { const q = await getDocs(constraints.length ? query(getCol(c), ...constraints) : getCol(c)); return q.docs.map(x => x.data()); }
-        };
-
-        if(isCanvas) {
-            const initAuth = async () => {
-                try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth); } catch(e) { console.error("Canvas Auth Error:", e); }
-            }; initAuth();
-        }
-
-        addEvt('btn-login-google','click',()=>{
-            const m=id('mensagem-erro'); if(m){m.innerText="Abrindo...";show(m);}
-            signInWithPopup(auth,provider).catch((err)=>{if(m){m.innerHTML="Erro de Login: " + err.message;show(m);}});
+        // --- CONTROLE DE AUTENTICAÇÃO ---
+        const provider = new GoogleAuthProvider();
+        
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showToast('Erro ao fazer login: ' + error.message, 'error');
+            }
         });
-        addEvt('btn-bypass-login','click',async()=>{
-            const m=id('mensagem-erro'); if(m){m.innerText="Entrando anonimamente...";show(m);}
-            try{await signInAnonymously(auth);}catch(err){if(m){m.innerHTML="Erro no login: " + err.message;show(m);}}
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth);
         });
-        const logout=()=>{signOut(auth).then(()=>window.showNotif('Sessão encerrada.')).catch(console.error);};
-        addEvt('btn-sair','click',logout);
 
-        let localProducts = [];
-        let localOps = [];
-        let localEntries = [];
-        let localOutbound = [];
-        let localExpBatches = [];
+        onAuthStateChanged(auth, (user) => {
+            const loader = document.getElementById('loader');
+            const loginView = document.getElementById('login-view');
+            const appContainer = document.getElementById('app-container');
 
-        onAuthStateChanged(auth, async u => {
-            if(u) {
-                hide(id('login-wrapper')); show(id('app-wrapper')); 
-                try {
-                    let isMainAdmin = (u.email && u.email.toLowerCase() === 'estoque@imaccongelados.com.br') || u.uid === 'admin';
-                    let mainAdminUid = null;
-                    const pDoc = await getDoc(doc(db, 'global_settings', 'company_db'));
-                    if(pDoc.exists() && pDoc.data().masterUid) mainAdminUid = pDoc.data().masterUid;
+            loader.style.display = 'none';
 
-                    const userDoc = await getDoc(doc(db, 'global_users', u.email || u.uid));
-                    if(userDoc.exists()) {
-                        const uData = userDoc.data();
-                        masterDbUid = uData.masterDbUid || mainAdminUid || u.uid;
-                        if (isMainAdmin) masterDbUid = u.uid;
-                    } else {
-                        masterDbUid = u.uid;
-                        if (isMainAdmin) await setDoc(doc(db, 'global_settings', 'company_db'), { masterUid: u.uid }, {merge: true});
-                        await setDoc(doc(db, 'global_users', u.email || u.uid), { email: u.email || u.uid, role: 'admin', masterDbUid: masterDbUid });
-                    }
-                    if(id('nome-usuario')) id('nome-usuario').innerText = `Expedição`;
-                    
-                    const today = new Date().toISOString().split('T')[0];
-                    id('hist-date-filter').value = today;
-                    if(id('ops-date-filter')) id('ops-date-filter').value = today;
-                    if(id('out-date-filter')) id('out-date-filter').value = today;
-                    
-                    await refreshData(true);
-                } catch(e) { window.showNotif('Erro de conexão.', true); console.error(e); }
+            if (user) {
+                usuarioAtual = user;
+                loginView.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                
+                // Atualizar UI do Usuário
+                document.getElementById('user-name').innerText = user.displayName || user.email;
+                if (user.photoURL) {
+                    const img = document.getElementById('user-avatar');
+                    img.src = user.photoURL;
+                    img.classList.remove('hidden');
+                    document.getElementById('user-icon-fallback').classList.add('hidden');
+                }
+
+                iniciarListenersBanco();
+                navigate('dashboard');
             } else {
-                show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
+                usuarioAtual = null;
+                loginView.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+                
+                if(unsubEstoque) unsubEstoque();
+                if(unsubMovimentos) unsubMovimentos();
             }
         });
 
-        // OTIMIZAÇÃO: Caches para economizar reads do Firebase
-        window.refreshData = async (forceDb = false) => {
-            show(id('loading-overlay'));
-            try {
-                // 1. INVENTÁRIO (PRODUTOS FINAIS APENAS)
-                // Se já carregou na memória e não foi forçado, reaproveita.
-                if(forceDb || localProducts.length === 0) {
-                    const rDocs = await getDocs(getCol('recipes'));
-                    localProducts = rDocs.docs.map(d => ({ id: d.id, ...d.data() }));
-                }
-                
-                // LIMITES DE DATA OTIMIZADOS PARA ECONOMIZAR LEITURAS (READS)
-                const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-                const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-                const limit7Str = new Date(Date.now() - sevenDaysMs).toISOString();
-                const limit30Str = new Date(Date.now() - thirtyDaysMs).toISOString();
-
-                // 2. ORDEM DE PRODUÇÃO (LIMITADO A 7 DIAS - Só pendentes recentes)
-                const allOps = await DB.getAll('productionOrders', [where('date', '>=', limit7Str)]);
-                localOps = allOps.filter(o => o.status === 'concluída' && localProducts.some(p => p.id === o.recipeId));
-                
-                // 3. ENTRADAS DA EXPEDIÇÃO (LIMITADO A 7 DIAS - Histórico curto)
-                const allEntries = await DB.getAll('expedition_entries', [where('date', '>=', limit7Str)]);
-                localEntries = allEntries;
-                
-                // 4. SAÍDAS DA EXPEDIÇÃO (LIMITADO A 30 DIAS - Para cálculo da Média)
-                const allOut = await DB.getAll('expedition_outbound', [where('date', '>=', limit30Str)]);
-                localOutbound = allOut;
-
-                // 5. LOTES DA EXPEDIÇÃO (Ativos)
-                const allBatches = await DB.getAll('expedition_batches');
-                localExpBatches = allBatches.filter(b => b.qty > 0);
-
-                renderDashboard();
-                renderOpsPendentes();
-                renderHistory();
-                renderConfig();
-                renderInventory();
-                renderOutboundHistory();
-                
-                if(forceDb) window.showNotif('Dados Sincronizados!');
-            } catch (e) {
-                console.error("Erro refresh", e);
-                window.showNotif('Erro ao puxar dados.', true);
-            }
-            hide(id('loading-overlay'));
-        }
-
-        function getExpectedYield(productId, multiplier) {
-            const p = localProducts.find(x => x.id === productId);
-            if(!p) return 0;
-            const yieldPerOp = parseFloat(p.expYield) || 0;
-            return yieldPerOp * multiplier;
-        }
-
-        function getUom(productId) {
-            const p = localProducts.find(x => x.id === productId);
-            return (p && p.expUoM) ? p.expUoM.toUpperCase() : 'UN';
-        }
-
-        function renderDashboard() {
-            const pendentes = localOps.filter(o => o.expeditionStatus !== 'recebida').length;
-            const hoje = new Date().toISOString().split('T')[0];
-            const recebidasHoje = localEntries.filter(e => e.date && e.date.startsWith(hoje));
-            const divHoje = recebidasHoje.filter(e => Math.abs(e.divergence) > 0.001).length;
-
-            id('dash-pendentes').innerText = pendentes;
-            id('dash-recebidas').innerText = recebidasHoje.length;
-            id('dash-divergencias').innerText = divHoje;
-        }
-
-        function renderOpsPendentes() {
-            const tbody = id('ops-pendentes-body');
-            const q = (id('search-ops').value || '').toLowerCase();
-            const dtFilter = id('ops-date-filter') ? id('ops-date-filter').value : '';
-            
-            let ops = localOps.filter(o => o.expeditionStatus !== 'recebida');
-
-            if(dtFilter) {
-                ops = ops.filter(o => o.date && o.date.startsWith(dtFilter));
-            }
-
-            if(q) {
-                ops = ops.filter(o => (o.recipeName||'').toLowerCase().includes(q) || (o.id||'').toLowerCase().includes(q));
-            }
-
-            ops.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            if(ops.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma OP pendente na data selecionada.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = ops.map(o => {
-                const dt = new Date(o.date).toLocaleDateString('pt-BR');
-                return `
-                    <tr class="base-tr">
-                        <td class="base-td font-mono text-xs text-ios-textMuted">${o.id ? o.id.substring(0,8) : '-'}</td>
-                        <td class="base-td font-bold text-white">${o.recipeName}</td>
-                        <td class="base-td text-center text-ios-blue">${o.multiplier}x</td>
-                        <td class="base-td text-center">${dt}</td>
-                        <td class="base-td text-center">
-                            <button class="bg-ios-blue text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-blue-600 transition-colors shadow-sm shadow-ios-blue/20" onclick="openReceiveModal('${o.id}')">
-                                <i class="fa-solid fa-dolly mr-1"></i> Receber
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
-        window.openReceiveModal = (opId) => {
-            const op = localOps.find(x => x.id === opId);
-            if(!op) return;
-            const prod = localProducts.find(x => x.id === op.recipeId);
-            if(!prod) return;
-
-            if(!prod.expYield || !prod.expUoM) {
-                window.showNotif('Produto não configurado! Configure primeiro na aba Config. Rendimentos.', true);
-                document.querySelector('.nav-btn[data-target="config"]').click();
-                return;
-            }
-
-            const expected = getExpectedYield(prod.id, op.multiplier);
-            const uom = getUom(prod.id);
-
-            id('recv-op-id').value = op.id;
-            id('recv-product-id').value = prod.id;
-            id('recv-product-name').innerText = prod.name;
-            id('recv-expected').value = expected.toFixed(2);
-            id('recv-actual').value = expected.toFixed(2); 
-            id('recv-lote').value = op.outputBatch || op.id.substring(0,6).toUpperCase();
-            
-            document.querySelectorAll('.recv-unit').forEach(el => el.innerText = uom);
-            updateDivergence();
-            show(id('receive-modal'));
-        };
-
-        function updateDivergence() {
-            const exp = parseFloat(id('recv-expected').value) || 0;
-            const act = parseFloat(id('recv-actual').value) || 0;
-            const diff = act - exp;
-            const divEl = id('recv-divergence');
-            
-            divEl.innerText = (diff > 0 ? '+' : '') + diff.toFixed(2);
-            divEl.className = `font-bold text-xl ${diff > 0.001 ? 'text-ios-green' : (diff < -0.001 ? 'text-ios-red' : 'text-ios-textMuted')}`;
-        }
-        addEvt('recv-actual', 'input', updateDivergence);
-
-        addEvt('receive-form', 'submit', async e => {
-            e.preventDefault();
-            const opId = id('recv-op-id').value;
-            const pId = id('recv-product-id').value;
-            const exp = parseFloat(id('recv-expected').value) || 0;
-            const act = parseFloat(id('recv-actual').value);
-            if(isNaN(act)) return;
-
-            const op = localOps.find(x => x.id === opId);
-            if(!op) return;
-
-            show(id('loading-overlay'));
-            try {
-                const entry = {
-                    opId: op.id,
-                    productId: pId,
-                    productName: id('recv-product-name').innerText,
-                    date: new Date().toISOString(),
-                    expectedQty: exp,
-                    actualQty: act,
-                    divergence: act - exp,
-                    uom: id('recv-expected').nextElementSibling.innerText,
-                    lote: id('recv-lote').value.trim(),
-                    validade: id('recv-validade').value
-                };
-                const newId = await DB.add('expedition_entries', entry);
-                entry.id = newId;
-                localEntries.push(entry);
-
-                // ATUALIZAR LOTES DA EXPEDIÇÃO (PVPS)
-                const batchId = `${pId}_${entry.lote}`;
-                let bDoc = localExpBatches.find(x => x.id === batchId);
-                if(bDoc) {
-                    bDoc.qty += act;
-                    await DB.update('expedition_batches', bDoc);
-                } else {
-                    bDoc = { id: batchId, productId: pId, productName: p.name, lote: entry.lote, validade: entry.validade, qty: act };
-                    await DB.update('expedition_batches', bDoc); // will create since id is provided
-                    localExpBatches.push(bDoc);
-                }
-
-                // ATUALIZAR ESTOQUE ABSOLUTO DA RECEITA
-                p.expStock = (p.expStock || 0) + act;
-                await DB.update('recipes', p);
-
-                op.expeditionStatus = 'recebida';
-                await DB.update('productionOrders', op);
-
-                hide(id('receive-modal'));
-                window.showNotif('Entrada Registrada!');
-                
-                renderDashboard();
-                renderOpsPendentes();
-                renderHistory();
-                renderInventory();
-            } catch(err) {
-                console.error(err);
-                window.showNotif('Erro ao salvar entrada', true);
-            }
-            hide(id('loading-overlay'));
-        });
-
-        addEvt('search-ops', 'input', renderOpsPendentes);
-
-        window.renderHistory = () => {
-            const tbody = id('history-body');
-            let entries = [...localEntries];
-            
-            const dtFilter = id('hist-date-filter').value;
-            if(dtFilter) {
-                entries = entries.filter(e => e.date && e.date.startsWith(dtFilter));
-            }
-
-            entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            if(entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-ios-textMuted">Nenhuma entrada na data selecionada.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = entries.map(e => {
-                const dt = new Date(e.date).toLocaleString('pt-BR');
-                const diff = e.divergence || 0;
-                let diffHtml = `<span class="text-ios-textMuted font-mono">0.00</span>`;
-                if(diff > 0.001) diffHtml = `<span class="text-ios-green font-bold font-mono">+${diff.toFixed(2)}</span>`;
-                else if(diff < -0.001) diffHtml = `<span class="text-ios-red font-bold font-mono">${diff.toFixed(2)}</span>`;
-
-                return `
-                    <tr class="base-tr">
-                        <td class="base-td text-[11px] text-ios-textMuted">${dt}</td>
-                        <td class="base-td font-bold text-white">${e.productName}</td>
-                        <td class="base-td text-center font-mono text-[11px] text-ios-textMuted">${e.lote || '-'}</td>
-                        <td class="base-td text-right font-mono text-ios-textMuted">${e.expectedQty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
-                        <td class="base-td text-right font-mono font-bold text-ios-blue">${e.actualQty.toFixed(2)} <span class="text-[9px]">${e.uom}</span></td>
-                        <td class="base-td text-center">${diffHtml}</td>
-                        <td class="base-td text-center font-mono text-[10px] text-ios-textMuted">${e.opId ? e.opId.substring(0,8) : '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-        };
-
-        // ================= INVENTORY =================
-        function renderInventory() {
-            const tbody = id('inventory-body');
-            if(!tbody) return;
-            const q = (id('search-inventory').value || '').toLowerCase();
-            
-            let list = [...localProducts];
-            if(q) list = list.filter(p => (p.name||'').toLowerCase().includes(q));
-
-            // Calcular saídas médias (últimos 30 dias)
-            // Agrupar localOutbound por productId. Cada item em localOutbound tem um array de consumedBatches ou qty.
-            const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-            const nowMs = Date.now();
-            
-            let html = '';
-            list.forEach(p => {
-                const stock = p.expStock || 0;
-                const min = p.expMin || 0;
-                const max = p.expMax || 0;
-                const teorica = p.expTheoreticalOut || 0;
-                
-                // Real 30d avg
-                const pOuts = localOutbound.filter(o => o.productId === p.id && (nowMs - new Date(o.date).getTime() <= thirtyDaysMs));
-                const totalOutQty = pOuts.reduce((sum, o) => sum + (o.qty || 0), 0);
-                const avgReal = totalOutQty / 30; // Média de 30 dias
-                
-                let sugMin = 0;
-                if(stock < min) sugMin = min - stock;
-                
-                // Garantia de 3 dias
-                const daysCov = 3;
-                let sugAvg = (avgReal * daysCov) - stock;
-                if(sugAvg < 0) sugAvg = 0;
-
-                html += `
-                    <tr class="base-tr">
-                        <td class="base-td font-bold text-white">${p.name}</td>
-                        <td class="base-td text-center font-mono font-bold ${stock < min ? 'text-ios-red' : 'text-ios-green'}">${stock.toFixed(2)} ${p.expUoM || 'un'}</td>
-                        <td class="base-td text-center font-mono text-xs text-ios-textMuted">${min} / ${max}</td>
-                        <td class="base-td text-center font-mono text-ios-textMuted">${teorica.toFixed(2)}</td>
-                        <td class="base-td text-center font-mono text-white">${avgReal.toFixed(2)}</td>
-                        <td class="base-td text-center font-mono font-bold text-ios-orange">${sugMin > 0 ? '+'+sugMin.toFixed(2) : '-'}</td>
-                        <td class="base-td text-center font-mono font-bold text-ios-blue">${sugAvg > 0 ? '+'+sugAvg.toFixed(2) : '-'}</td>
-                        <td class="base-td text-center">
-                            <button class="bg-ios-bg border border-ios-border px-2 py-1 rounded text-ios-blue hover:bg-ios-blue/10" onclick="editInvConfig('${p.id}')"><i class="fa-solid fa-pen"></i></button>
-                        </td>
-                    </tr>
-                `;
+        // --- SINCRONIZAÇÃO COM FIRESTORE ---
+        function iniciarListenersBanco() {
+            // Monitorar Estoque
+            unsubEstoque = onSnapshot(collection(db, 'estoque'), (snapshot) => {
+                estoque = [];
+                snapshot.forEach(doc => {
+                    estoque.push({ id: doc.id, ...doc.data() });
+                });
+                atualizarUI();
+            }, (error) => {
+                showToast('Erro ao ler estoque.', 'error');
             });
-            tbody.innerHTML = html || `<tr><td colspan="8" class="text-center py-6 text-ios-textMuted">Nenhum produto</td></tr>`;
+
+            // Monitorar Movimentos (Para médias)
+            unsubMovimentos = onSnapshot(collection(db, 'movimentos'), (snapshot) => {
+                movimentos = [];
+                snapshot.forEach(doc => {
+                    movimentos.push({ id: doc.id, ...doc.data() });
+                });
+                atualizarUI();
+            }, (error) => {
+                console.error("Erro movimentos:", error);
+            });
         }
-        addEvt('search-inventory', 'input', renderInventory);
 
-        window.editInvConfig = (idProd) => {
-            const p = localProducts.find(x => x.id === idProd);
-            if(!p) return;
-            id('inv-cfg-id').value = p.id;
-            id('inv-cfg-name').innerText = p.name;
-            id('inv-cfg-min').value = p.expMin || 0;
-            id('inv-cfg-max').value = p.expMax || 0;
-            id('inv-cfg-theoretical').value = p.expTheoreticalOut || 0;
-            show(id('inventory-config-modal'));
-        };
+        function atualizarUI() {
+            atualizarDatalist();
+            if (document.getElementById('view-dashboard').classList.contains('block')) updateDashboard();
+            if (document.getElementById('view-estoque').classList.contains('block')) renderTabelaEstoque();
+            if (document.getElementById('view-saida').classList.contains('block')) revalidarSaldoSaida();
+        }
 
-        addEvt('inventory-config-form', 'submit', async e => {
-            e.preventDefault();
-            const pId = id('inv-cfg-id').value;
-            const p = localProducts.find(x => x.id === pId);
-            if(!p) return;
+        // --- NAVEGAÇÃO ---
+        const views = ['dashboard', 'entrada', 'saida', 'estoque'];
+        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Gestão de Estoque' };
 
-            show(id('loading-overlay'));
-            try {
-                p.expMin = parseFloat(id('inv-cfg-min').value) || 0;
-                p.expMax = parseFloat(id('inv-cfg-max').value) || 0;
-                p.expTheoreticalOut = parseFloat(id('inv-cfg-theoretical').value) || 0;
-                await DB.update('recipes', p);
-                hide(id('inventory-config-modal'));
-                renderInventory();
-                window.showNotif('Configuração de estoque salva!');
-            } catch(err) {
-                console.error(err);
-                window.showNotif('Erro ao salvar', true);
-            }
-            hide(id('loading-overlay'));
-        });
-
-        // ================= OUTBOUND (SAÍDAS PVPS) =================
-        function createSearchableSelect(container, data, placeholder) {
-            container.innerHTML = `
-                <div class="relative w-full">
-                    <input type="text" class="form-input text-xs py-1.5 search-input" placeholder="${placeholder}" required>
-                    <input type="hidden" class="req-out-prod">
-                    <ul class="absolute z-50 w-full bg-ios-card border border-ios-border rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-xl search-dropdown"></ul>
-                </div>
-            `;
-            const input = container.querySelector('.search-input');
-            const hidden = container.querySelector('.req-out-prod');
-            const dropdown = container.querySelector('.search-dropdown');
+        window.navigate = function(viewId) {
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`view-${v}`).classList.remove('block');
+                document.getElementById(`nav-${v}`).classList.remove('sidebar-active');
+            });
             
-            const renderList = (q) => {
-                const term = q.toLowerCase();
-                const filtered = data.filter(d => (d.name||'').toLowerCase().includes(term));
-                dropdown.innerHTML = filtered.map(d => `<li class="px-3 py-2 text-xs text-white hover:bg-ios-blue hover:text-white cursor-pointer" data-id="${d.id}">${d.name}</li>`).join('');
-                if(!filtered.length) dropdown.innerHTML = `<li class="px-3 py-2 text-xs text-ios-textMuted">Nenhum encontrado</li>`;
-            };
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.getElementById(`view-${viewId}`).classList.add('block');
+            document.getElementById(`nav-${viewId}`).classList.add('sidebar-active');
+            document.getElementById('page-title').innerText = titles[viewId] || 'Gestão';
+
+            atualizarUI();
+        }
+
+        // --- LÓGICA DE NEGÓCIO E VALIDADE ---
+        function analisarValidade(dataValidadeStr) {
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            const dataValidade = new Date(dataValidadeStr + 'T12:00:00'); 
+            const diffTime = dataValidade - hoje;
+            const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            input.addEventListener('focus', () => { renderList(input.value); show(dropdown); });
-            input.addEventListener('input', e => { renderList(e.target.value); hidden.value = ''; });
-            
-            dropdown.addEventListener('mousedown', e => {
-                if(e.target.tagName === 'LI' && e.target.dataset.id) {
-                    input.value = e.target.innerText;
-                    hidden.value = e.target.dataset.id;
-                    hide(dropdown);
+            let status = 'LIBERADO';
+            if (diasRestantes <= 30) status = 'BLOQUEADO';
+            else if (diasRestantes <= 35) status = 'ALERTA';
+
+            return { status, diasRestantes };
+        }
+
+        // Autocomplete inteligente
+        function atualizarDatalist() {
+            const datalist = document.getElementById('estoque-itens-list');
+            const itensUnicos = [...new Set(estoque.map(item => item.nome))];
+            datalist.innerHTML = itensUnicos.map(nome => `<option value="${nome}">`).join('');
+        }
+
+        // --- DASHBOARD ---
+        function updateDashboard() {
+            let totalItens = 0, alertas = 0, bloqueados = 0, lotesComSaldo = 0;
+
+            estoque.forEach(lote => {
+                if (lote.qtd > 0) {
+                    lotesComSaldo++;
+                    totalItens += lote.qtd;
+                    const analise = analisarValidade(lote.validade);
+                    if (analise.status === 'BLOQUEADO') bloqueados++;
+                    if (analise.status === 'ALERTA') alertas++;
                 }
             });
-            input.addEventListener('blur', () => hide(dropdown));
+
+            document.getElementById('dash-total-items').innerText = totalItens.toFixed(2);
+            document.getElementById('dash-alert-items').innerText = alertas;
+            document.getElementById('dash-blocked-items').innerText = bloqueados;
+
+            let saude = 100;
+            if (lotesComSaldo > 0) saude = ((lotesComSaldo - bloqueados) / lotesComSaldo) * 100;
+            document.getElementById('dash-health-percent').innerText = `${saude.toFixed(0)}%`;
+
+            calcularMedias();
         }
 
-        addEvt('add-outbound-item-btn', 'click', () => {
-            const container = id('outbound-items-container');
-            const row = document.createElement('div');
-            row.className = 'flex items-end gap-2 bg-ios-bg p-2 rounded-lg border border-ios-border';
+        function calcularMedias() {
+            const diasAnalise = 30; // Analisando últimos 30 dias
+            const limiteAtras = new Date();
+            limiteAtras.setDate(limiteAtras.getDate() - diasAnalise);
             
-            const selContainer = document.createElement('div');
-            selContainer.className = 'flex-1';
-            
-            row.appendChild(selContainer);
-            
-            const qtyContainer = document.createElement('div');
-            qtyContainer.className = 'w-24';
-            qtyContainer.innerHTML = `
-                <input type="number" step="0.01" min="0.01" class="form-input text-xs py-1.5 font-bold text-ios-blue req-out-qty" placeholder="Qtd" required>
-            `;
-            row.appendChild(qtyContainer);
-            
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'btn-secondary px-2 py-1.5 rounded-lg text-ios-red';
-            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-            delBtn.onclick = () => row.remove();
-            row.appendChild(delBtn);
+            let saidasPorItem = {};
 
-            container.appendChild(row);
-            
-            createSearchableSelect(selContainer, localProducts, 'Buscar Produto...');
-        });
-
-        window.renderOutboundHistory = () => {
-            const tbody = id('outbound-history-body');
-            if(!tbody) return;
-            const dtFilter = id('out-date-filter').value;
-            
-            let list = [...localOutbound];
-            if(dtFilter) list = list.filter(e => e.date && e.date.startsWith(dtFilter));
-            list.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            if(list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-ios-textMuted">Nenhuma saída nesta data.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = list.map(e => {
-                const consumedStr = (e.consumedBatches || []).map(b => `${b.lote}(${b.qty})`).join(', ') || e.lote;
-                return `
-                <tr class="base-tr">
-                    <td class="base-td text-[11px] text-ios-textMuted">${new Date(e.date).toLocaleString('pt-BR')}</td>
-                    <td class="base-td font-bold text-white">${e.productName}</td>
-                    <td class="base-td text-center font-mono text-[10px] text-ios-orange">${consumedStr}</td>
-                    <td class="base-td text-right font-mono font-bold text-ios-orange">${e.qty.toFixed(2)} <span class="text-[9px]">${e.uom || ''}</span></td>
-                </tr>
-                `;
-            }).join('');
-        };
-
-        addEvt('outbound-form', 'submit', async e => {
-            e.preventDefault();
-            const rows = document.querySelectorAll('#outbound-items-container > div');
-            if(rows.length === 0) return window.showNotif('Adicione pelo menos um item', true);
-
-            const dateStr = new Date().toISOString();
-
-            // Prepare items
-            let itemsToProcess = [];
-            for(let row of rows) {
-                const pId = row.querySelector('.req-out-prod').value;
-                const qty = parseFloat(row.querySelector('.req-out-qty').value);
-                const p = localProducts.find(x => x.id === pId);
-                if(!p || isNaN(qty) || qty <= 0) return window.showNotif('Verifique os itens inseridos', true);
-                
-                // Verify if there is enough physical stock across all batches
-                const availableBatches = localExpBatches.filter(b => b.productId === pId && b.qty > 0);
-                const totalAvail = availableBatches.reduce((s, b) => s + b.qty, 0);
-                if(totalAvail < qty) {
-                    return window.showNotif(`Estoque insuficiente para ${p.name}. Disponível: ${totalAvail.toFixed(2)}`, true);
-                }
-                
-                itemsToProcess.push({ p, qty, availableBatches });
-            }
-
-            show(id('loading-overlay'));
-            try {
-                for(let item of itemsToProcess) {
-                    let remainingToDeduct = item.qty;
-                    let consumed = [];
-                    
-                    // SORT BATCHES BY VALIDADE ASC (PVPS)
-                    item.availableBatches.sort((a,b) => new Date(a.validade) - new Date(b.validade));
-                    
-                    for(let b of item.availableBatches) {
-                        if(remainingToDeduct <= 0) break;
-                        
-                        let deductFromThisBatch = Math.min(b.qty, remainingToDeduct);
-                        b.qty -= deductFromThisBatch;
-                        remainingToDeduct -= deductFromThisBatch;
-                        
-                        await DB.update('expedition_batches', b);
-                        consumed.push({ lote: b.lote, validade: b.validade, qty: deductFromThisBatch });
+            movimentos.forEach(mov => {
+                if (mov.tipo === 'SAIDA') {
+                    const dataMov = new Date(mov.data);
+                    if (dataMov >= limiteAtras) {
+                        if (!saidasPorItem[mov.nome]) saidasPorItem[mov.nome] = { qtd: 0, und: mov.und };
+                        saidasPorItem[mov.nome].qtd += Number(mov.qtd);
                     }
-                    
-                    // Update Product Stock
-                    item.p.expStock = (item.p.expStock || 0) - item.qty;
-                    await DB.update('recipes', item.p);
-
-                    // Record Outbound Entry
-                    const outDoc = {
-                        productId: item.p.id,
-                        productName: item.p.name,
-                        qty: item.qty,
-                        uom: item.p.expUoM || 'un',
-                        date: dateStr,
-                        consumedBatches: consumed
-                    };
-                    const newId = await DB.add('expedition_outbound', outDoc);
-                    outDoc.id = newId;
-                    localOutbound.push(outDoc);
                 }
+            });
 
-                id('outbound-form').reset();
-                id('outbound-items-container').innerHTML = '';
-                renderOutboundHistory();
-                renderInventory();
-                window.showNotif('Saída em lote registrada com sucesso!');
-            } catch(err) {
-                console.error(err);
-                window.showNotif('Erro ao processar saída', true);
-            }
-            hide(id('loading-overlay'));
-        });
-
-        function renderConfig() {
-            const tbody = id('config-body');
-            const q = (id('search-config').value || '').toLowerCase();
-            
-            let list = localProducts;
-            if(q) list = list.filter(p => (p.name||'').toLowerCase().includes(q));
-
-            if(list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-ios-textMuted">Nenhum produto final encontrado.</td></tr>`;
+            const container = document.getElementById('dash-medias');
+            if (Object.keys(saidasPorItem).length === 0) {
+                container.innerHTML = 'Nenhum dado de saída nos últimos 30 dias.';
                 return;
             }
 
-            tbody.innerHTML = list.map(p => {
-                const uom = p.expUoM || 'un';
-                const y = p.expYield || '';
-                return `
-                    <tr class="base-tr">
-                        <td class="base-td font-bold text-white w-1/2">${p.name}</td>
-                        <td class="base-td w-1/4">
-                            <select class="form-input py-2 text-sm bg-ios-bg config-uom" data-id="${p.id}">
-                                <option value="un" ${uom === 'un' ? 'selected' : ''}>Unidade (UN)</option>
-                                <option value="kg" ${uom === 'kg' ? 'selected' : ''}>Peso (KG)</option>
-                            </select>
-                        </td>
-                        <td class="base-td w-1/4">
-                            <div class="flex gap-2">
-                                <input type="number" step="0.001" min="0" class="form-input py-2 text-sm bg-ios-bg config-yield font-mono" data-id="${p.id}" value="${y}" placeholder="Rend. Real">
-                                <button class="btn-primary py-2 px-3 shrink-0 rounded-lg" onclick="saveConfig('${p.id}')"><i class="fa-solid fa-save"></i></button>
-                            </div>
+            let html = '<ul class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">';
+            for (const [nome, data] of Object.entries(saidasPorItem)) {
+                let mediaDiaria = (data.qtd / diasAnalise).toFixed(2);
+                html += `
+                    <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <span class="font-medium text-gray-800">${nome}</span>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 block">Consumo Diário</span>
+                            <span class="font-bold text-brand-600">${mediaDiaria} <span class="text-xs font-normal">${data.und}/dia</span></span>
+                        </div>
+                    </li>`;
+            }
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        // --- ENTRADA MÚLTIPLA ---
+        document.getElementById('form-entrada-item').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('ent-nome').value.trim().toUpperCase();
+            const lote = document.getElementById('ent-lote').value.trim();
+            const qtd = parseFloat(document.getElementById('ent-qtd').value);
+            
+            listaEntradaTemporaria.push({
+                nome,
+                dataEntrada: document.getElementById('ent-data').value,
+                lote,
+                qtd,
+                und: document.getElementById('ent-und').value,
+                validade: document.getElementById('ent-validade').value
+            });
+            
+            renderListaEntrada();
+            
+            // Limpa apenas lote, qtd e validade, mantendo nome e data para agilizar
+            document.getElementById('ent-lote').value = '';
+            document.getElementById('ent-qtd').value = '';
+            document.getElementById('ent-validade').value = '';
+            document.getElementById('ent-lote').focus();
+        });
+
+        window.removerItemEntrada = function(index) {
+            listaEntradaTemporaria.splice(index, 1);
+            renderListaEntrada();
+        }
+
+        function renderListaEntrada() {
+            const box = document.getElementById('box-lista-entrada');
+            const tbody = document.getElementById('tbody-lista-entrada');
+            tbody.innerHTML = '';
+
+            if(listaEntradaTemporaria.length === 0) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            box.classList.remove('hidden');
+            listaEntradaTemporaria.forEach((item, index) => {
+                const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 font-medium">${item.nome}</td>
+                        <td class="py-3">${item.lote}</td>
+                        <td class="py-3">${valStr}</td>
+                        <td class="py-3 text-right font-bold">${item.qtd.toFixed(2)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td>
+                        <td class="py-3 text-center">
+                            <button onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
                 `;
-            }).join('');
+            });
         }
-        addEvt('search-config', 'input', renderConfig);
 
-        window.saveConfig = async (idProd) => {
-            const tr = document.querySelector(`.config-uom[data-id="${idProd}"]`).closest('tr');
-            const uom = tr.querySelector('.config-uom').value;
-            const yieldVal = parseFloat(tr.querySelector('.config-yield').value);
+        document.getElementById('btn-salvar-entradas').addEventListener('click', async () => {
+            if(listaEntradaTemporaria.length === 0) return;
             
-            if(isNaN(yieldVal) || yieldVal <= 0) return window.showNotif('Informe um rendimento válido!', true);
-
-            const p = localProducts.find(x => x.id === idProd);
-            if(!p) return;
-
-            show(id('loading-overlay'));
             try {
-                p.expUoM = uom;
-                p.expYield = yieldVal;
-                await DB.update('recipes', p);
-                window.showNotif('Configuração Salva!');
-            } catch(e) {
-                console.error(e);
-                window.showNotif('Erro ao salvar.', true);
+                const batch = writeBatch(db);
+                const timestamp = new Date().toISOString();
+
+                listaEntradaTemporaria.forEach(item => {
+                    // Adicionar ao estoque
+                    const refEstoque = doc(collection(db, 'estoque'));
+                    batch.set(refEstoque, { ...item });
+
+                    // Adicionar histórico de movimento
+                    const refMov = doc(collection(db, 'movimentos'));
+                    batch.set(refMov, {
+                        tipo: 'ENTRADA',
+                        nome: item.nome,
+                        lote: item.lote,
+                        qtd: item.qtd,
+                        und: item.und,
+                        data: timestamp,
+                        usuario: usuarioAtual.email
+                    });
+                });
+
+                await batch.commit();
+                
+                showToast(`${listaEntradaTemporaria.length} itens registrados com sucesso!`, 'success');
+                listaEntradaTemporaria = [];
+                renderListaEntrada();
+                document.getElementById('form-entrada-item').reset();
+                document.getElementById('ent-data').valueAsDate = new Date();
+
+            } catch (error) {
+                showToast('Erro ao salvar entradas: ' + error.message, 'error');
             }
-            hide(id('loading-overlay'));
-        };
-        
-        addEvt('btn-export-hist', 'click', () => {
-            if(!localEntries || !localEntries.length) return window.showNotif('Nada para exportar.');
-            
-            const dtFilter = id('hist-date-filter').value;
-            let entries = [...localEntries];
-            if(dtFilter) entries = entries.filter(e => e.date && e.date.startsWith(dtFilter));
-            if(!entries.length) return window.showNotif('Nenhuma entrada nesta data.');
-            
-            const data = entries.map(e => ({
-                'Data': new Date(e.date).toLocaleString('pt-BR'),
-                'Produto': e.productName,
-                'Qtd Esperada': e.expectedQty,
-                'Qtd Recebida': e.actualQty,
-                'Divergência': e.divergence,
-                'Unidade': e.uom,
-                'OP Vinculada': e.opId
-            }));
-            
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Expedição");
-            XLSX.writeFile(wb, `Entradas_Expedicao_${new Date().toISOString().split('T')[0]}.xlsx`);
         });
 
+        // --- SAÍDA MÚLTIPLA E BUSCA INTELIGENTE ---
+        const inputSaiNome = document.getElementById('sai-nome');
+        
+        inputSaiNome.addEventListener('input', revalidarSaldoSaida);
+
+        function obterSaldoLiberado(nomeItem) {
+            let total = 0;
+            let und = '';
+            estoque.forEach(l => {
+                if (l.nome === nomeItem && l.qtd > 0 && analisarValidade(l.validade).status !== 'BLOQUEADO') {
+                    total += Number(l.qtd);
+                    und = l.und;
+                }
+            });
+            // Subtrair o que já está na lista temporária
+            const emLista = listaSaidaTemporaria.filter(i => i.nome === nomeItem).reduce((acc, i) => acc + i.qtd, 0);
+            return { total: total - emLista, und };
+        }
+
+        function revalidarSaldoSaida() {
+            const nome = inputSaiNome.value.trim().toUpperCase();
+            if(nome) {
+                const disp = obterSaldoLiberado(nome);
+                if(disp.total > 0) {
+                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-green-600">Disponível: ${disp.total.toFixed(2)} ${disp.und}</span>`;
+                    document.getElementById('sai-qtd').max = disp.total;
+                } else {
+                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado.</span>`;
+                }
+            } else {
+                document.getElementById('sai-saldo-disp').innerHTML = '';
+            }
+        }
+
+        document.getElementById('form-saida-item').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nome = inputSaiNome.value.trim().toUpperCase();
+            const qtd = parseFloat(document.getElementById('sai-qtd').value);
+            
+            const disp = obterSaldoLiberado(nome);
+
+            if (qtd > disp.total) {
+                showToast(`Quantidade excede o saldo liberado (${disp.total.toFixed(2)}).`, 'error');
+                return;
+            }
+
+            listaSaidaTemporaria.push({ nome, qtd, und: disp.und });
+            renderListaSaida();
+            revalidarSaldoSaida();
+            document.getElementById('sai-qtd').value = '';
+            inputSaiNome.value = '';
+            inputSaiNome.focus();
+        });
+
+        window.removerItemSaida = function(index) {
+            listaSaidaTemporaria.splice(index, 1);
+            renderListaSaida();
+            revalidarSaldoSaida();
+        }
+
+        function renderListaSaida() {
+            const box = document.getElementById('box-lista-saida');
+            const tbody = document.getElementById('tbody-lista-saida');
+            tbody.innerHTML = '';
+
+            if(listaSaidaTemporaria.length === 0) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            box.classList.remove('hidden');
+            listaSaidaTemporaria.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 font-medium text-lg">${item.nome}</td>
+                        <td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
+                        <td class="py-3 text-center">
+                            <button onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('btn-salvar-saidas').addEventListener('click', async () => {
+            if(listaSaidaTemporaria.length === 0) return;
+
+            try {
+                const batch = writeBatch(db);
+                const timestamp = new Date().toISOString();
+                
+                // Clonar o estoque atual em memória para manipulação segura das reduções dentro do loop
+                let estoqueTemp = JSON.parse(JSON.stringify(estoque));
+
+                for (let req of listaSaidaTemporaria) {
+                    let lotesItem = estoqueTemp.filter(l => l.nome === req.nome && l.qtd > 0 && analisarValidade(l.validade).status !== 'BLOQUEADO');
+                    lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade)); // PVPS
+
+                    let qtdRestante = req.qtd;
+                    let logBaixas = [];
+
+                    for (let lote of lotesItem) {
+                        if (qtdRestante <= 0) break;
+                        
+                        let retirar = Math.min(lote.qtd, qtdRestante);
+                        qtdRestante -= retirar;
+                        lote.qtd -= retirar; // Atualiza no array temp
+                        
+                        logBaixas.push({ lote: lote.lote, retirado: retirar });
+
+                        // Atualiza no banco
+                        batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
+                    }
+
+                    if (qtdRestante > 0) {
+                        throw new Error(`Estoque insuficiente modificado por outro usuário para ${req.nome}. Tente novamente.`);
+                    }
+
+                    // Registra movimento de saída
+                    batch.set(doc(collection(db, 'movimentos')), {
+                        tipo: 'SAIDA',
+                        nome: req.nome,
+                        qtd: req.qtd,
+                        und: req.und,
+                        data: timestamp,
+                        detalhes_pvps: logBaixas,
+                        usuario: usuarioAtual.email
+                    });
+                }
+
+                await batch.commit();
+                showToast('Saídas processadas com sucesso (PVPS aplicado)!', 'success');
+                listaSaidaTemporaria = [];
+                renderListaSaida();
+                revalidarSaldoSaida();
+
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        // --- TABELA DE ESTOQUE ---
+        function renderTabelaEstoque() {
+            const tbody = document.getElementById('tabela-estoque');
+            tbody.innerHTML = '';
+
+            let lotesAtivos = estoque.filter(l => l.qtd > 0);
+            lotesAtivos.sort((a, b) => new Date(a.validade) - new Date(b.validade));
+
+            if (lotesAtivos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lote em estoque.</td></tr>';
+                return;
+            }
+
+            lotesAtivos.forEach(l => {
+                const analise = analisarValidade(l.validade);
+                let badgeClass = ''; let icon = '';
+                if (analise.status === 'BLOQUEADO') { badgeClass = 'bg-red-100 text-red-800 border-red-200'; icon = 'ph-prohibit'; } 
+                else if (analise.status === 'ALERTA') { badgeClass = 'bg-yellow-100 text-yellow-800 border-yellow-200'; icon = 'ph-warning-circle'; } 
+                else { badgeClass = 'bg-green-100 text-green-800 border-green-200'; icon = 'ph-check-circle'; }
+
+                const valStr = new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-4">
+                            <span class="px-2 py-1 text-xs font-bold rounded-md border flex inline-flex items-center w-max ${badgeClass}">
+                                <i class="ph ${icon} mr-1"></i> ${analise.status}
+                            </span>
+                        </td>
+                        <td class="p-4 font-medium text-gray-800">${l.nome}</td>
+                        <td class="p-4 text-gray-600">${l.lote}</td>
+                        <td class="p-4 text-gray-600">${valStr}</td>
+                        <td class="p-4">
+                            <span class="font-medium ${analise.diasRestantes <= 30 ? 'text-red-500' : (analise.diasRestantes <= 35 ? 'text-yellow-500' : 'text-gray-600')}">
+                                ${analise.diasRestantes} dias
+                            </span>
+                        </td>
+                        <td class="p-4 text-right font-bold text-gray-800 text-lg">
+                            ${Number(l.qtd).toFixed(2)} <span class="text-xs text-gray-500 font-normal">${l.und}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const iconContainer = document.getElementById('toast-icon');
+            const msgContainer = document.getElementById('toast-msg');
+
+            msgContainer.innerText = message;
+
+            if (type === 'success') {
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg';
+                iconContainer.innerHTML = '<i class="ph ph-check text-xl"></i>';
+            } else {
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg';
+                iconContainer.innerHTML = '<i class="ph ph-warning text-xl"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
+        }
     </script>
 </body>
 </html>
