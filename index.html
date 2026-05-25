@@ -1138,10 +1138,15 @@
                 
                 if (file.type.startsWith('image/')) {
                     btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Lendo Imagem (OCR)...';
-                    const worker = await window.Tesseract.createWorker('por');
-                    const ret = await worker.recognize(file);
-                    fullText = ret.data.text;
-                    await worker.terminate();
+                    try {
+                        const worker = await window.Tesseract.createWorker('por');
+                        const ret = await worker.recognize(file);
+                        fullText = ret.data.text;
+                        await worker.terminate();
+                    } catch (ocrErr) {
+                        console.error('Erro no OCR:', ocrErr);
+                        throw new Error('Falha na leitura da imagem. Verifique sua conexão ou tente usar um PDF.');
+                    }
                 } else if (file.type === 'application/pdf') {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -1159,21 +1164,26 @@
                         let lastY = null;
                         items.forEach(item => {
                             if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
-                                fullText += '\\n';
+                                fullText += ' '; // Evita quebra de linha rígida
                             }
                             fullText += item.str + ' ';
                             lastY = item.transform[5];
                         });
-                        fullText += '\\n';
+                        fullText += ' ';
                     }
                 } else {
                     throw new Error("Formato não suportado");
                 }
 
-                let normFullText = fullText.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase();
+                // Normaliza o texto: remove acentos e transforma TUDO em uma única linha contínua
+                let normFullText = fullText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                // O pulo do gato para o OCR funcionar: substitui quebras de linha por espaços vazios
+                normFullText = normFullText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
                 
-                // Regex: Código (Opcional) | Produto | Peso | Unidade | Receitas
-                const regex = /\\b(\\d+)?\\s+([A-Z0-9\\s\\-]+?)\\s+([\\d.,]+)\\s*(KG|UND|CX)\\s+(\\d+)\\b/gi;
+                console.log("Texto extraído:", normFullText); // Útil para depuração no console
+
+                // Regex magnética: (Nome do Produto começando com letra) + (Número de Peso) + (Unidade). Ignora lixo ao redor.
+                const regex = /([A-Z][A-Z0-9\s\-]{2,}?)\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML)\b/gi;
                 let matches = [...normFullText.matchAll(regex)];
                 
                 let importados = 0;
@@ -1181,16 +1191,22 @@
                 const batch = writeBatch(db);
                 let requiresBatchCommit = false;
 
-                // Armazena nomes do estoque para saber o que já temos
                 const itensCadastrados = new Set(estoque.map(l => l.nome));
+                const ignoreList = ['PRODUTO', 'PESO', 'RECEITA', 'RECEITAS', 'TOTAL', 'SUBTOTAL', 'CODIGO', 'COD'];
 
                 for (const match of matches) {
-                    let nomeOriginal = match[2].trim().replace(/\\s+/g, ' '); 
-                    let qtdStr = match[3].replace(',', '.'); 
-                    let und = match[4].toLowerCase();
+                    let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
+                    
+                    // Se pegou o cabeçalho por engano, ignora
+                    if (ignoreList.includes(nomeOriginal) || nomeOriginal.length < 3) continue;
+
+                    let qtdStr = match[2].replace(',', '.'); 
+                    let und = match[3].toLowerCase();
+                    if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
+                    
                     let qtd = parseFloat(qtdStr);
 
-                    if (!isNaN(qtd) && qtd > 0 && nomeOriginal.length > 2) {
+                    if (!isNaN(qtd) && qtd > 0) {
                         
                         if (!itensCadastrados.has(nomeOriginal)) {
                             // Cadastrar novo item vazio (saldo zero)
@@ -1226,16 +1242,16 @@
                 if (importados > 0) {
                     renderListaSaida();
                     revalidarSaldoSaida();
-                    let msg = `${importados} linha(s) importada(s) do arquivo com sucesso.`;
-                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) no sistema com saldo zero).`;
+                    let msg = `${importados} item(ns) importado(s) com sucesso.`;
+                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) com saldo zero).`;
                     window.showToast(msg, 'success');
                 } else {
-                    window.showToast('Nenhum item válido identificado no arquivo.', 'error');
+                    window.showToast('Nenhum item válido identificado no arquivo. Verifique a nitidez da imagem.', 'error');
                 }
 
             } catch (error) {
                 console.error(error);
-                window.showToast('Falha ao processar o arquivo. Tente novamente.', 'error');
+                window.showToast('Falha: ' + error.message, 'error');
             } finally {
                 btn.innerHTML = '<i class="ph ph-scan mr-2 text-lg"></i> Importar Relatório (PDF ou Print)';
                 btn.disabled = false;
