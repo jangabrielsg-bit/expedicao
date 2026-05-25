@@ -10,8 +10,10 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- PDF.js para leitura do relatório de saída -->
+    
+    <!-- Bibliotecas de Leitura Inteligente (PDF e OCR para Imagens) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -288,7 +290,7 @@
                 <div id="view-saida" class="hidden space-y-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
                         <div class="bg-brand-50 text-brand-800 p-4 rounded-lg mb-6 border border-brand-200 text-sm">
-                            <i class="ph-fill ph-info mr-1"></i> <strong>Atenção PVPS:</strong> O sistema dará baixa automaticamente nos lotes com a data de validade mais próxima. Lotes a menos de 30 dias ou em <strong>Teste</strong> estão bloqueados.
+                            <i class="ph-fill ph-info mr-1"></i> <strong>Atenção PVPS:</strong> O sistema dará baixa nos lotes de validade mais próxima. <strong>Dica:</strong> Se solicitar quantidade maior do que a liberada no estoque, o sistema adicionará a quantidade e acusará <strong class="text-red-600">"FALTA"</strong> na lista de saída.
                         </div>
                         
                         <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 border-b border-gray-100 pb-4 gap-4">
@@ -296,9 +298,10 @@
                                 <i class="ph ph-minus-circle text-red-500 mr-2 text-xl"></i> Adicionar Itens à Saída
                             </h3>
                             <div>
-                                <input type="file" id="upload-pdf" accept="application/pdf" class="hidden" onchange="window.lerPDFSaida(event)">
+                                <!-- Aceita PDF e Imagens (Prints) -->
+                                <input type="file" id="upload-pdf" accept="application/pdf, image/png, image/jpeg, image/jpg" class="hidden" onchange="window.lerPDFSaida(event)">
                                 <button type="button" id="btn-importar-pdf" onclick="document.getElementById('upload-pdf').click()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-lg transition-colors inline-flex items-center text-sm border border-indigo-200 shadow-sm">
-                                    <i class="ph ph-file-pdf mr-2 text-lg"></i> Importar de PDF
+                                    <i class="ph ph-scan mr-2 text-lg"></i> Importar Relatório (PDF ou Print)
                                 </button>
                             </div>
                         </div>
@@ -819,7 +822,8 @@
                     if (dataMov >= limiteAtras) {
                         if (nomeItem && mov.nome !== nomeItem) return; 
                         if (!saidasPorItem[mov.nome]) saidasPorItem[mov.nome] = { qtd: 0, und: mov.und };
-                        saidasPorItem[mov.nome].qtd += Number(mov.qtd);
+                        // Usa qtdAtendida se existir, senão usa qtd
+                        saidasPorItem[mov.nome].qtd += Number(mov.qtdAtendida || mov.qtd);
                     }
                 }
             });
@@ -966,9 +970,8 @@
                 const disp = obterSaldoLiberado(nome);
                 if(disp.total > 0) {
                     document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-green-600">Disponível: ${disp.total.toFixed(2)} ${disp.und}</span>`;
-                    document.getElementById('sai-qtd').max = disp.total;
                 } else {
-                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado. (Retidos/bloqueados)</span>`;
+                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado. (Retidos/bloqueados ou Falta)</span>`;
                 }
             } else document.getElementById('sai-saldo-disp').innerHTML = '';
             previewSaidaLotes();
@@ -998,7 +1001,7 @@
             }
 
             if (qtdRestante > 0) {
-                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Quantidade solicitada excede o saldo liberado no sistema. ${qtdRestante.toFixed(2)} faltantes.</p>`;
+                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Serão baixados o possível. Faltará ${qtdRestante.toFixed(2)} no estoque.</p>`;
             } else {
                 let html = '<div class="text-xs bg-blue-50 p-3 rounded border border-blue-100"><strong class="text-blue-800 flex items-center mb-1"><i class="ph ph-magic-wand mr-1"></i> Lotes que sofrerão baixa (PVPS):</strong><ul class="space-y-1">';
                 lotesUsados.forEach(u => {
@@ -1011,11 +1014,16 @@
 
         document.getElementById('form-saida-item').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nome = inputSaiNome.value.trim().toUpperCase(); const qtd = parseFloat(inputSaiQtd.value);
-            const disp = obterSaldoLiberado(nome);
-            if (qtd > disp.total) return window.showToast(`Excede o liberado (${disp.total.toFixed(2)}).`, 'error');
-            listaSaidaTemporaria.push({ nome, qtd, und: disp.und });
-            renderListaSaida(); revalidarSaldoSaida();
+            const nome = inputSaiNome.value.trim().toUpperCase(); 
+            const qtd = parseFloat(inputSaiQtd.value);
+            
+            // Allow adding to list even if missing balance (we just flag it in the list UI)
+            const itemEstoque = estoque.find(l => l.nome === nome);
+            const und = itemEstoque ? itemEstoque.und : 'kg';
+            
+            listaSaidaTemporaria.push({ nome, qtd, und: und });
+            renderListaSaida(); 
+            revalidarSaldoSaida();
             inputSaiQtd.value = ''; inputSaiNome.value = ''; inputSaiNome.focus();
         });
 
@@ -1026,8 +1034,37 @@
             tbody.innerHTML = '';
             if(listaSaidaTemporaria.length === 0) { box.classList.add('hidden'); return; }
             box.classList.remove('hidden');
+            
+            // Map the items locally to consolidate same items for disp check
+            const agrupadoSaida = new Map();
+            listaSaidaTemporaria.forEach(i => {
+                agrupadoSaida.set(i.nome, (agrupadoSaida.get(i.nome) || 0) + i.qtd);
+            });
+
             listaSaidaTemporaria.forEach((item, index) => {
-                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium text-lg">${item.nome}</td><td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td></tr>`;
+                let totalLiberado = 0;
+                estoque.forEach(l => {
+                    const analise = analisarValidade(l.validade, l.isTeste);
+                    if (l.nome === item.nome && l.qtd > 0 && analise.status !== 'BLOQUEADO' && analise.status !== 'TESTE') {
+                        totalLiberado += Number(l.qtd);
+                    }
+                });
+
+                const totalPedido = agrupadoSaida.get(item.nome);
+                let faltaHTML = '';
+                if (totalPedido > totalLiberado) {
+                    const falta = totalPedido - totalLiberado;
+                    faltaHTML = `<div class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold inline-block mt-1 uppercase border border-red-200"><i class="ph ph-warning mr-1"></i> Falta no Estoque (${falta.toFixed(2)} ${item.und})</div>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                        <td class="py-3 font-medium text-lg leading-tight">
+                            ${item.nome}<br>${faltaHTML}
+                        </td>
+                        <td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
+                        <td class="py-3 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td>
+                    </tr>`;
             });
         }
 
@@ -1039,27 +1076,43 @@
             btn.disabled = true;
 
             try {
-                const batch = writeBatch(db); const timestamp = new Date().toISOString();
+                const batch = writeBatch(db); 
+                const timestamp = new Date().toISOString();
                 let estoqueTemp = JSON.parse(JSON.stringify(estoque));
                 
                 for (let req of listaSaidaTemporaria) {
                     let lotesItem = estoqueTemp.filter(l => l.nome === req.nome && l.qtd > 0 && analisarValidade(l.validade, l.isTeste).status !== 'BLOQUEADO' && analisarValidade(l.validade, l.isTeste).status !== 'TESTE');
                     lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
                     
-                    let qtdRestante = req.qtd; let logBaixas = [];
+                    let qtdRestante = req.qtd; 
+                    let logBaixas = [];
                     for (let lote of lotesItem) {
                         if (qtdRestante <= 0) break;
                         let retirar = Math.min(lote.qtd, qtdRestante);
-                        qtdRestante -= retirar; lote.qtd -= retirar; 
+                        qtdRestante -= retirar; 
+                        lote.qtd -= retirar; 
                         logBaixas.push({ lote: lote.lote, retirado: retirar });
                         batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
                     }
-                    if (qtdRestante > 0) throw new Error(`Estoque insuficiente de ${req.nome}. Alguém pode ter modificado o saldo.`);
-                    batch.set(doc(collection(db, 'movimentos')), { tipo: 'SAIDA', nome: req.nome, qtd: req.qtd, und: req.und, data: timestamp, detalhes_pvps: logBaixas, usuario: usuarioAtual.email });
+                    
+                    let nota = qtdRestante > 0 ? `Item parcialmente em falta no estoque físico (Faltou ${qtdRestante.toFixed(2)} ${req.und})` : '';
+                    let qtdAtendida = req.qtd - qtdRestante;
+
+                    batch.set(doc(collection(db, 'movimentos')), { 
+                        tipo: 'SAIDA', 
+                        nome: req.nome, 
+                        qtd: req.qtd, // O que foi solicitado na nota
+                        qtdAtendida: qtdAtendida, // O que de fato saiu do estoque
+                        und: req.und, 
+                        data: timestamp, 
+                        detalhes_pvps: logBaixas, 
+                        nota: nota,
+                        usuario: usuarioAtual.email 
+                    });
                 }
                 
                 await batch.commit(); 
-                window.showToast('Saídas salvas com sucesso (PVPS aplicado)!', 'success');
+                window.showToast('Baixas registradas e salvas com sucesso!', 'success');
                 listaSaidaTemporaria = []; renderListaSaida(); revalidarSaldoSaida();
                 document.getElementById('sai-preview-box').innerHTML = '';
             } catch (error) { 
@@ -1070,108 +1123,123 @@
             }
         });
 
-        // --- IMPORTAÇÃO DE PDF DE SAÍDA ---
+        // --- IMPORTAÇÃO DE PDF E PRINTS DE SAÍDA (TESSERACT / PDFJS) ---
         window.lerPDFSaida = async function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const btn = document.getElementById('btn-importar-pdf');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Lendo...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Processando Arquivo...';
             btn.disabled = true;
 
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 let fullText = '';
                 
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + ' ';
-                }
-
-                // Normaliza o texto: sem acentos, uppercase, espaços simples
-                const normalize = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, ' ');
-                let normFullText = normalize(fullText);
-
-                // Busca nomes do estoque
-                const itensEstoqueMap = new Map();
-                estoque.forEach(l => {
-                    if (l.qtd > 0 && analisarValidade(l.validade, l.isTeste).status !== 'BLOQUEADO' && analisarValidade(l.validade, l.isTeste).status !== 'TESTE') {
-                        itensEstoqueMap.set(l.nome, (itensEstoqueMap.get(l.nome) || 0) + Number(l.qtd));
-                    }
-                });
-
-                // Ordena os itens do maior para o menor nome (Evita que "PÃO" encontre dentro de "PÃO DE QUEIJO" antes da hora)
-                const nomesUnicos = Array.from(itensEstoqueMap.keys()).sort((a, b) => b.length - a.length);
-
-                let importados = 0;
-                let ajustados = 0;
-                let ignorados = 0;
-
-                for (const nomeOriginal of nomesUnicos) {
-                    const nomeNorm = normalize(nomeOriginal);
-                    const escapedNome = nomeNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                if (file.type.startsWith('image/')) {
+                    btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Lendo Imagem (OCR)...';
+                    const worker = await window.Tesseract.createWorker('por');
+                    const ret = await worker.recognize(file);
+                    fullText = ret.data.text;
+                    await worker.terminate();
+                } else if (file.type === 'application/pdf') {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     
-                    // Procura o nome do item seguido por números e separadores (vírgula/ponto) -> ex: "PAO FRANCES 7.775"
-                    const regex = new RegExp(escapedNome + '\\s+([\\d.,]+)', 'g');
-                    let matches = [...normFullText.matchAll(regex)];
-
-                    for (const match of matches) {
-                        let qtdStr = match[1].replace(',', '.'); // Prepara vírgula brasileira para ponto de float
-                        let qtd = parseFloat(qtdStr);
-
-                        if (!isNaN(qtd) && qtd > 0) {
-                            const dispTotal = obterSaldoLiberado(nomeOriginal).total;
-                            
-                            if (dispTotal <= 0) {
-                                ignorados++;
-                                continue;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        
+                        const items = textContent.items;
+                        items.sort((a, b) => {
+                            if (Math.abs(b.transform[5] - a.transform[5]) > 5) return b.transform[5] - a.transform[5];
+                            return a.transform[4] - b.transform[4];
+                        });
+                        
+                        let lastY = null;
+                        items.forEach(item => {
+                            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+                                fullText += '\\n';
                             }
-
-                            if (qtd > dispTotal) {
-                                qtd = dispTotal; // Limita à quantidade que temos no estoque livre
-                                ajustados++;
-                            }
-
-                            const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
-                            if (existingIndex >= 0) {
-                                let novaQtd = listaSaidaTemporaria[existingIndex].qtd + qtd;
-                                if (novaQtd > dispTotal) {
-                                    novaQtd = dispTotal;
-                                    ajustados++;
-                                }
-                                listaSaidaTemporaria[existingIndex].qtd = novaQtd;
-                            } else {
-                                listaSaidaTemporaria.push({ nome: nomeOriginal, qtd, und: obterSaldoLiberado(nomeOriginal).und });
-                            }
-                            importados++;
-                        }
+                            fullText += item.str + ' ';
+                            lastY = item.transform[5];
+                        });
+                        fullText += '\\n';
                     }
-                    // Remove do texto processado para não cruzar matches em outros itens
-                    normFullText = normFullText.replace(regex, ' ');
+                } else {
+                    throw new Error("Formato não suportado");
                 }
+
+                let normFullText = fullText.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase();
+                
+                // Regex: Código (Opcional) | Produto | Peso | Unidade | Receitas
+                const regex = /\\b(\\d+)?\\s+([A-Z0-9\\s\\-]+?)\\s+([\\d.,]+)\\s*(KG|UND|CX)\\s+(\\d+)\\b/gi;
+                let matches = [...normFullText.matchAll(regex)];
+                
+                let importados = 0;
+                let criadosZeros = 0;
+                const batch = writeBatch(db);
+                let requiresBatchCommit = false;
+
+                // Armazena nomes do estoque para saber o que já temos
+                const itensCadastrados = new Set(estoque.map(l => l.nome));
+
+                for (const match of matches) {
+                    let nomeOriginal = match[2].trim().replace(/\\s+/g, ' '); 
+                    let qtdStr = match[3].replace(',', '.'); 
+                    let und = match[4].toLowerCase();
+                    let qtd = parseFloat(qtdStr);
+
+                    if (!isNaN(qtd) && qtd > 0 && nomeOriginal.length > 2) {
+                        
+                        if (!itensCadastrados.has(nomeOriginal)) {
+                            // Cadastrar novo item vazio (saldo zero)
+                            const novoLoteRef = doc(collection(db, 'estoque'));
+                            batch.set(novoLoteRef, {
+                                nome: nomeOriginal,
+                                setor: 'N/A',
+                                lote: '-',
+                                qtd: 0,
+                                und: und, 
+                                validade: '',
+                                isTeste: false
+                            });
+                            requiresBatchCommit = true;
+                            itensCadastrados.add(nomeOriginal);
+                            estoque.push({ id: novoLoteRef.id, nome: nomeOriginal, qtd: 0, und: und });
+                            criadosZeros++;
+                        }
+
+                        // Juntar na lista se o mesmo item aparecer de novo no relatório
+                        const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
+                        if (existingIndex >= 0) {
+                            listaSaidaTemporaria[existingIndex].qtd += qtd;
+                        } else {
+                            listaSaidaTemporaria.push({ nome: nomeOriginal, qtd, und: und });
+                        }
+                        importados++;
+                    }
+                }
+
+                if (requiresBatchCommit) await batch.commit();
 
                 if (importados > 0) {
                     renderListaSaida();
                     revalidarSaldoSaida();
-                    
-                    let msg = `${importados} item(ns) encontrado(s) no PDF e adicionado(s) à lista.`;
-                    if (ajustados > 0) msg += ` (Alguns foram ajustados ao seu saldo máximo disponível).`;
-                    if (ignorados > 0) msg += ` (Itens sem saldo liberado foram ignorados).`;
+                    let msg = `${importados} linha(s) importada(s) do arquivo com sucesso.`;
+                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) no sistema com saldo zero).`;
                     window.showToast(msg, 'success');
                 } else {
-                    window.showToast('Nenhum item do seu estoque atual foi encontrado no PDF.', 'error');
+                    window.showToast('Nenhum item válido identificado no arquivo.', 'error');
                 }
 
             } catch (error) {
                 console.error(error);
-                window.showToast('Falha ao processar o PDF. Arquivo inválido ou corrompido.', 'error');
+                window.showToast('Falha ao processar o arquivo. Tente novamente.', 'error');
             } finally {
-                btn.innerHTML = '<i class="ph ph-file-pdf mr-2 text-lg"></i> Importar de PDF';
+                btn.innerHTML = '<i class="ph ph-scan mr-2 text-lg"></i> Importar Relatório (PDF ou Print)';
                 btn.disabled = false;
-                event.target.value = ''; // reseta input de arquivo
+                event.target.value = ''; 
             }
         }
 
