@@ -387,7 +387,7 @@
                                         <th class="p-4 font-bold">Item</th>
                                         <th class="p-4 font-bold">Avisos / Status</th>
                                         <th class="p-4 font-bold text-right">Saldo Total</th>
-                                        <th class="p-4 w-10 text-center">Detalhes</th>
+                                        <th class="p-4 w-32 text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-estoque" class="text-sm divide-y divide-gray-50">
@@ -587,7 +587,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Validade</label>
-                        <input type="date" id="edit-lote-val" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
+                        <input type="date" id="edit-lote-val" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
                     </div>
                 </div>
                 <div class="pt-4 flex gap-3">
@@ -777,6 +777,7 @@
 
         // --- LÓGICA DE NEGÓCIO E VALIDADE ---
         function analisarValidade(dataValidadeStr, isTeste = false) {
+            if (!dataValidadeStr) return { status: 'LIBERADO', diasRestantes: 999 };
             const hoje = new Date();
             hoje.setHours(0,0,0,0);
             const dataValidade = new Date(dataValidadeStr + 'T12:00:00'); 
@@ -1177,30 +1178,25 @@
 
                 // Normaliza o texto: remove acentos e transforma TUDO em uma única linha contínua
                 let normFullText = fullText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                // O pulo do gato para o OCR funcionar: substitui quebras de linha por espaços vazios
+                // Substitui quebras de linha por espaços vazios
                 normFullText = normFullText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
                 
-                console.log("Texto extraído:", normFullText); // Útil para depuração no console
+                console.log("Texto extraído:", normFullText); // Útil para depuração
 
                 // Limpeza pesada de cabeçalhos e ruídos do sistema emissor do relatório
                 const lixo = [
-                    /C[OÓ]DIGO\s+PRODUTO\s+PESO\s+RECEITAS/gi,
-                    /LISTA\s+DE\s+PRODU[CÇ][AÃ]O\s+[A-Z0-9\-\s]+/gi,
-                    /\b24\s*HORAS\b/gi,
-                    /\b48\s*HORAS\b/gi,
-                    /\bP[AÃ]ES\s+DE\s+QUEIJO\b/gi,
-                    /\bSALGADOS\b/gi,
-                    /\bCONFEITARIA\b/gi,
-                    /\bCODIGO\b/gi,
-                    /\bPRODUTO\b/gi,
-                    /\bPESO\b/gi,
-                    /\bRECEITAS?\b/gi
+                    'CODIGO', 'PRODUTO', 'PESO', 'RECEITAS', 'RECEITA', 
+                    'LISTA DE PRODUCAO', '24 HORAS', '48 HORAS', 
+                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES 24H'
                 ];
-                lixo.forEach(r => { normFullText = normFullText.replace(r, ' '); });
-                normFullText = normFullText.replace(/\s+/g, ' '); // remove espaços duplos remanescentes
+                lixo.forEach(palavra => { 
+                    const reg = new RegExp('\\b' + palavra.replace(/-/g, '\\-') + '\\b', 'gi');
+                    normFullText = normFullText.replace(reg, ' '); 
+                });
+                normFullText = normFullText.replace(/\s+/g, ' ').trim(); 
 
-                // Regex magnética: (Nome do Produto começando com letra) + (Número de Peso) + (Unidade). Ignora lixo ao redor.
-                const regex = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML)\b/gi;
+                // Regex magnética para puxar PRODUTO + PESO + UNIDADE, ignorando o número inicial
+                const regex = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\b/gi;
                 let matches = [...normFullText.matchAll(regex)];
                 
                 let importados = 0;
@@ -1213,14 +1209,15 @@
                 for (const match of matches) {
                     let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
                     
+                    if (nomeOriginal.length < 3) continue;
+
                     let qtdStr = match[2].replace(',', '.'); 
                     let und = match[3].toLowerCase();
                     if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
                     
                     let qtd = parseFloat(qtdStr);
 
-                    if (!isNaN(qtd) && qtd > 0 && nomeOriginal.length > 2) {
-                        
+                    if (!isNaN(qtd) && qtd > 0) {
                         if (!itensCadastrados.has(nomeOriginal)) {
                             // Cadastrar novo item vazio (saldo zero)
                             const novoLoteRef = doc(collection(db, 'estoque'));
@@ -1239,7 +1236,6 @@
                             criadosZeros++;
                         }
 
-                        // Juntar na lista se o mesmo item aparecer de novo no relatório
                         const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
                         if (existingIndex >= 0) {
                             listaSaidaTemporaria[existingIndex].qtd += qtd;
@@ -1259,7 +1255,7 @@
                     if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) no sistema com saldo zero).`;
                     window.showToast(msg, 'success');
                 } else {
-                    window.showToast('Nenhum item válido identificado no arquivo. Verifique a nitidez.', 'error');
+                    window.showToast('Nenhum item válido identificado no arquivo. Verifique a nitidez da imagem.', 'error');
                 }
 
             } catch (error) {
@@ -1343,13 +1339,35 @@
                             ${item.total.toFixed(2)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
                         </td>
                         <td class="p-4 text-center">
-                            <button onclick="window.abrirModalItem('${item.nome}')" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-200 font-medium text-sm transition-colors shadow-sm whitespace-nowrap">
-                                <i class="ph ph-list-magnifying-glass mr-1"></i> Ver Lotes
-                            </button>
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="window.abrirModalItem('${item.nome}')" title="Ver Lotes" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-200 font-medium text-sm transition-colors shadow-sm whitespace-nowrap">
+                                    <i class="ph ph-list-magnifying-glass mr-1"></i> Lotes
+                                </button>
+                                <button onclick="window.excluirItemTodo('${item.nome}')" title="Excluir Produto Completo do Estoque" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1.5 rounded-lg border border-red-200 transition-colors shadow-sm">
+                                    <i class="ph ph-trash text-lg"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
+        }
+
+        // --- SISTEMA DE EXCLUSÃO DE ITEM COMPLETO ---
+        window.excluirItemTodo = async function(nomeItem) {
+            if(!confirm(`⚠️ CUIDADO: Você está prestes a excluir COMPLETAMENTE o item "${nomeItem}" e TODOS os seus lotes do sistema. Esta ação não pode ser desfeita. Confirmar exclusão permanente?`)) return;
+            try {
+                const lotesDoItem = estoque.filter(l => l.nome === nomeItem);
+                const batch = writeBatch(db);
+                lotesDoItem.forEach(l => {
+                    batch.delete(doc(db, 'estoque', l.id));
+                });
+                await batch.commit();
+                await registrarEdicao(nomeItem, 'EXCLUSÃO', `Removeu o item completo do catálogo de estoque (todos os lotes).`);
+                window.showToast(`Item "${nomeItem}" e seus lotes foram excluídos permanentemente.`, 'success');
+            } catch (error) {
+                window.showToast('Erro ao excluir item: ' + error.message, 'error');
+            }
         }
 
         // --- MODAL DETALHES DO ITEM (VER LOTES) ---
@@ -1375,11 +1393,11 @@
             tbody.innerHTML = '';
 
             let lotesItem = estoque.filter(l => l.nome === itemAtualModal); 
-            lotesItem = lotesItem.filter(l => l.qtd > 0); // Ocultar zerados no modal para não poluir
+            // Agora lotesItem MOSTRA OS ZERADOS no modal para você poder excluir lotes zerados criados pelo PDF
             lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
 
             if (lotesItem.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhum lote com saldo no momento.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhum lote registrado para este item.</td></tr>`;
                 return;
             }
 
@@ -1392,18 +1410,18 @@
                 else { badgeClass = 'bg-green-100 text-green-800 border-green-200'; icon = 'ph-check-circle'; }
 
                 const dataEnt = l.dataEntrada ? new Date(l.dataEntrada + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
-                const dataVal = new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                const dataVal = l.validade ? new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
                 
                 let btnLiberar = analise.status === 'TESTE' ? 
                     `<button onclick="window.liberarTeste('${l.id}')" title="Liberar CQ" class="text-purple-600 hover:text-purple-800 p-1"><i class="ph ph-check-circle text-lg"></i></button>` : '';
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-gray-50 transition-colors ${l.qtd <= 0 ? 'opacity-60 bg-gray-50' : ''}">
                         <td class="py-3 px-4 font-bold text-gray-800">${l.lote}</td>
                         <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
                         <td class="py-3 px-4 text-gray-600">${dataEnt}</td>
                         <td class="py-3 px-4 text-gray-600">
-                            ${dataVal} <span class="text-[10px] ml-1 ${analise.diasRestantes <= 35 && !l.isTeste ? 'text-red-500 font-bold' : 'text-gray-400'}">(${analise.diasRestantes}d)</span>
+                            ${dataVal} <span class="text-[10px] ml-1 ${analise.diasRestantes <= 35 && !l.isTeste ? 'text-red-500 font-bold' : 'text-gray-400'}">${analise.diasRestantes !== 999 ? '('+analise.diasRestantes+'d)' : ''}</span>
                         </td>
                         <td class="py-3 px-4">
                             <span class="px-2 py-1 text-[10px] font-bold rounded-md border flex items-center w-max ${badgeClass}">
@@ -1423,7 +1441,7 @@
             });
         }
 
-        // --- SISTEMA DE EDIÇÃO E EXCLUSÃO ---
+        // --- SISTEMA DE EDIÇÃO E EXCLUSÃO DE LOTES ---
         window.liberarTeste = async function(loteId) {
             if(!confirm("Tem certeza que deseja liberar este lote do status de Teste para Expedição?")) return;
             try {
