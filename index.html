@@ -1095,7 +1095,7 @@
                         batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
                     }
                     
-                    let nota = qtdRestante > 0 ? `Item parcialmente em falta no estoque físico (Faltou ${qtdRestante.toFixed(2)} ${req.und})` : '';
+                    let nota = qtdRestante > 0 ? `Faltou ${qtdRestante.toFixed(2)} ${req.und} no estoque no momento da baixa.` : '';
                     let qtdAtendida = req.qtd - qtdRestante;
 
                     batch.set(doc(collection(db, 'movimentos')), { 
@@ -1182,8 +1182,25 @@
                 
                 console.log("Texto extraído:", normFullText); // Útil para depuração no console
 
+                // Limpeza pesada de cabeçalhos e ruídos do sistema emissor do relatório
+                const lixo = [
+                    /C[OÓ]DIGO\s+PRODUTO\s+PESO\s+RECEITAS/gi,
+                    /LISTA\s+DE\s+PRODU[CÇ][AÃ]O\s+[A-Z0-9\-\s]+/gi,
+                    /\b24\s*HORAS\b/gi,
+                    /\b48\s*HORAS\b/gi,
+                    /\bP[AÃ]ES\s+DE\s+QUEIJO\b/gi,
+                    /\bSALGADOS\b/gi,
+                    /\bCONFEITARIA\b/gi,
+                    /\bCODIGO\b/gi,
+                    /\bPRODUTO\b/gi,
+                    /\bPESO\b/gi,
+                    /\bRECEITAS?\b/gi
+                ];
+                lixo.forEach(r => { normFullText = normFullText.replace(r, ' '); });
+                normFullText = normFullText.replace(/\s+/g, ' '); // remove espaços duplos remanescentes
+
                 // Regex magnética: (Nome do Produto começando com letra) + (Número de Peso) + (Unidade). Ignora lixo ao redor.
-                const regex = /([A-Z][A-Z0-9\s\-]{2,}?)\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML)\b/gi;
+                const regex = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML)\b/gi;
                 let matches = [...normFullText.matchAll(regex)];
                 
                 let importados = 0;
@@ -1192,21 +1209,17 @@
                 let requiresBatchCommit = false;
 
                 const itensCadastrados = new Set(estoque.map(l => l.nome));
-                const ignoreList = ['PRODUTO', 'PESO', 'RECEITA', 'RECEITAS', 'TOTAL', 'SUBTOTAL', 'CODIGO', 'COD'];
 
                 for (const match of matches) {
                     let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
                     
-                    // Se pegou o cabeçalho por engano, ignora
-                    if (ignoreList.includes(nomeOriginal) || nomeOriginal.length < 3) continue;
-
                     let qtdStr = match[2].replace(',', '.'); 
                     let und = match[3].toLowerCase();
                     if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
                     
                     let qtd = parseFloat(qtdStr);
 
-                    if (!isNaN(qtd) && qtd > 0) {
+                    if (!isNaN(qtd) && qtd > 0 && nomeOriginal.length > 2) {
                         
                         if (!itensCadastrados.has(nomeOriginal)) {
                             // Cadastrar novo item vazio (saldo zero)
@@ -1242,11 +1255,11 @@
                 if (importados > 0) {
                     renderListaSaida();
                     revalidarSaldoSaida();
-                    let msg = `${importados} item(ns) importado(s) com sucesso.`;
-                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) com saldo zero).`;
+                    let msg = `${importados} linha(s) importada(s) do arquivo com sucesso.`;
+                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) no sistema com saldo zero).`;
                     window.showToast(msg, 'success');
                 } else {
-                    window.showToast('Nenhum item válido identificado no arquivo. Verifique a nitidez da imagem.', 'error');
+                    window.showToast('Nenhum item válido identificado no arquivo. Verifique a nitidez.', 'error');
                 }
 
             } catch (error) {
