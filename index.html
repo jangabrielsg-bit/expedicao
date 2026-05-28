@@ -231,7 +231,7 @@
                                 </div>
                                 <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
-                                    <input type="number" step="0.01" id="ent-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
+                                    <input type="number" step="0.001" id="ent-qtd" required min="0.001" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.000">
                                 </div>
                                 <div class="col-span-1">
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unidade</label>
@@ -317,7 +317,7 @@
 
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade a Retirar</label>
-                                    <input type="number" step="0.01" id="sai-qtd" required min="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.00">
+                                    <input type="number" step="0.001" id="sai-qtd" required min="0.001" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors" placeholder="0.000">
                                 </div>
                             </div>
                             
@@ -387,7 +387,7 @@
                                         <th class="p-4 font-bold">Item</th>
                                         <th class="p-4 font-bold">Avisos / Status</th>
                                         <th class="p-4 font-bold text-right">Saldo Total</th>
-                                        <th class="p-4 w-32 text-center">Ações</th>
+                                        <th class="p-4 w-48 text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-estoque" class="text-sm divide-y divide-gray-50">
@@ -583,7 +583,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
-                        <input type="number" step="0.01" id="edit-lote-qtd" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
+                        <input type="number" step="0.001" id="edit-lote-qtd" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Validade</label>
@@ -661,6 +661,11 @@
         let itemAtualModal = ''; 
 
         document.getElementById('ent-data').valueAsDate = new Date();
+
+        // Helper global de formatação para exibição: até 3 casas decimais
+        window.fmtQtd = function(val) {
+            return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3, useGrouping: false });
+        };
 
         window.showToast = function(message, type) {
             const toast = document.getElementById('toast');
@@ -831,7 +836,7 @@
 
             if (nomeItem) {
                 if (!saidasPorItem[nomeItem]) return { media: 0, und: estoque.find(e=>e.nome === nomeItem)?.und || 'und' };
-                return { media: (saidasPorItem[nomeItem].qtd / diasAnalise).toFixed(2), und: saidasPorItem[nomeItem].und };
+                return { media: window.fmtQtd(saidasPorItem[nomeItem].qtd / diasAnalise), und: saidasPorItem[nomeItem].und };
             }
 
             return saidasPorItem;
@@ -851,7 +856,7 @@
                 }
             });
 
-            document.getElementById('dash-total-items').innerText = totalItens.toFixed(2);
+            document.getElementById('dash-total-items').innerText = window.fmtQtd(totalItens);
             document.getElementById('dash-alert-items').innerText = alertas;
             document.getElementById('dash-blocked-items').innerText = bloqueados;
             document.getElementById('dash-test-items').innerText = testes;
@@ -865,7 +870,7 @@
 
             let html = '<ul class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">';
             for (const [nome, data] of Object.entries(saidasPorItem)) {
-                let mediaDiaria = (data.qtd / 30).toFixed(2);
+                let mediaDiaria = window.fmtQtd(data.qtd / 30);
                 html += `
                     <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
                         <span class="font-medium text-gray-800">${nome}</span>
@@ -912,7 +917,7 @@
             listaEntradaTemporaria.forEach((item, index) => {
                 const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
                 const badgeTeste = item.isTeste ? '<span class="px-2 py-1 text-xs font-bold rounded bg-purple-100 text-purple-800 uppercase">Teste CQ</span>' : '-';
-                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium">${item.nome}</td><td class="py-3 text-gray-500">${item.setor||'N/A'}</td><td class="py-3">${item.lote}</td><td class="py-3">${valStr}</td><td class="py-3 text-center">${badgeTeste}</td><td class="py-3 text-right font-bold">${item.qtd.toFixed(2)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium">${item.nome}</td><td class="py-3 text-gray-500">${item.setor||'N/A'}</td><td class="py-3">${item.lote}</td><td class="py-3">${valStr}</td><td class="py-3 text-center">${badgeTeste}</td><td class="py-3 text-right font-bold">${window.fmtQtd(item.qtd)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></td></tr>`;
             });
         }
 
@@ -970,7 +975,7 @@
             if(nome) {
                 const disp = obterSaldoLiberado(nome);
                 if(disp.total > 0) {
-                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-green-600">Disponível: ${disp.total.toFixed(2)} ${disp.und}</span>`;
+                    document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-green-600">Disponível: ${window.fmtQtd(disp.total)} ${disp.und}</span>`;
                 } else {
                     document.getElementById('sai-saldo-disp').innerHTML = `<span class="text-red-500">Sem saldo liberado. (Retidos/bloqueados ou Falta)</span>`;
                 }
@@ -1002,11 +1007,11 @@
             }
 
             if (qtdRestante > 0) {
-                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Serão baixados o possível. Faltará ${qtdRestante.toFixed(2)} no estoque.</p>`;
+                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Serão baixados o possível. Faltará ${window.fmtQtd(qtdRestante)} no estoque.</p>`;
             } else {
                 let html = '<div class="text-xs bg-blue-50 p-3 rounded border border-blue-100"><strong class="text-blue-800 flex items-center mb-1"><i class="ph ph-magic-wand mr-1"></i> Lotes que sofrerão baixa (PVPS):</strong><ul class="space-y-1">';
                 lotesUsados.forEach(u => {
-                    html += `<li class="text-blue-700 flex justify-between"><span>Lote: <strong>${u.lote}</strong></span> <span>- ${u.qtd.toFixed(2)} ${u.und}</span></li>`;
+                    html += `<li class="text-blue-700 flex justify-between"><span>Lote: <strong>${u.lote}</strong></span> <span>- ${window.fmtQtd(u.qtd)} ${u.und}</span></li>`;
                 });
                 html += '</ul></div>';
                 previewBox.innerHTML = html;
@@ -1055,7 +1060,7 @@
                 let faltaHTML = '';
                 if (totalPedido > totalLiberado) {
                     const falta = totalPedido - totalLiberado;
-                    faltaHTML = `<div class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold inline-block mt-1 uppercase border border-red-200"><i class="ph ph-warning mr-1"></i> Falta no Estoque (${falta.toFixed(2)} ${item.und})</div>`;
+                    faltaHTML = `<div class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold inline-block mt-1 uppercase border border-red-200"><i class="ph ph-warning mr-1"></i> Falta no Estoque (${window.fmtQtd(falta)} ${item.und})</div>`;
                 }
 
                 tbody.innerHTML += `
@@ -1063,7 +1068,7 @@
                         <td class="py-3 font-medium text-lg leading-tight">
                             ${item.nome}<br>${faltaHTML}
                         </td>
-                        <td class="py-3 text-right font-bold text-lg">${item.qtd.toFixed(2)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
+                        <td class="py-3 text-right font-bold text-lg">${window.fmtQtd(item.qtd)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
                         <td class="py-3 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td>
                     </tr>`;
             });
@@ -1096,7 +1101,7 @@
                         batch.update(doc(db, 'estoque', lote.id), { qtd: lote.qtd });
                     }
                     
-                    let nota = qtdRestante > 0 ? `Faltou ${qtdRestante.toFixed(2)} ${req.und} no estoque no momento da baixa.` : '';
+                    let nota = qtdRestante > 0 ? `Faltou ${window.fmtQtd(qtdRestante)} ${req.und} no estoque no momento da baixa.` : '';
                     let qtdAtendida = req.qtd - qtdRestante;
 
                     batch.set(doc(collection(db, 'movimentos')), { 
@@ -1187,16 +1192,18 @@
                 const lixo = [
                     'CODIGO', 'PRODUTO', 'PESO', 'RECEITAS', 'RECEITA', 
                     'LISTA DE PRODUCAO', '24 HORAS', '48 HORAS', 
-                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES 24H'
+                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES 24H', 'PAES - 24H'
                 ];
                 lixo.forEach(palavra => { 
                     const reg = new RegExp('\\b' + palavra.replace(/-/g, '\\-') + '\\b', 'gi');
                     normFullText = normFullText.replace(reg, ' '); 
                 });
+                normFullText = normFullText.replace(/-\s*24H/gi, ' '); 
+                normFullText = normFullText.replace(/-\s*48H/gi, ' ');
                 normFullText = normFullText.replace(/\s+/g, ' ').trim(); 
 
-                // Regex magnética para puxar PRODUTO + PESO + UNIDADE, ignorando o número inicial
-                const regex = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\b/gi;
+                // Regex magnética para puxar (Código Opcional) PRODUTO + PESO + UNIDADE
+                const regex = /\b(?:(\d+)\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\b/gi;
                 let matches = [...normFullText.matchAll(regex)];
                 
                 let importados = 0;
@@ -1207,12 +1214,12 @@
                 const itensCadastrados = new Set(estoque.map(l => l.nome));
 
                 for (const match of matches) {
-                    let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
+                    let nomeOriginal = match[2].trim().replace(/\s+/g, ' '); 
                     
                     if (nomeOriginal.length < 3) continue;
 
-                    let qtdStr = match[2].replace(',', '.'); 
-                    let und = match[3].toLowerCase();
+                    let qtdStr = match[3].replace(',', '.'); 
+                    let und = match[4].toLowerCase();
                     if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
                     
                     let qtd = parseFloat(qtdStr);
@@ -1336,15 +1343,15 @@
                             <div class="flex flex-wrap gap-2">${badges}</div>
                         </td>
                         <td class="p-4 text-right font-bold text-gray-800 text-xl">
-                            ${item.total.toFixed(2)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
+                            ${window.fmtQtd(item.total)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
                         </td>
                         <td class="p-4 text-center">
                             <div class="flex justify-center space-x-2">
-                                <button onclick="window.abrirModalItem('${item.nome}')" title="Ver Lotes" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-200 font-medium text-sm transition-colors shadow-sm whitespace-nowrap">
-                                    <i class="ph ph-list-magnifying-glass mr-1"></i> Lotes
+                                <button onclick="window.abrirModalItem('${item.nome}')" title="Ver Lotes" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-200 font-medium text-sm transition-colors shadow-sm whitespace-nowrap flex items-center">
+                                    <i class="ph ph-list-magnifying-glass mr-1 text-lg"></i> Lotes
                                 </button>
-                                <button onclick="window.excluirItemTodo('${item.nome}')" title="Excluir Produto Completo do Estoque" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1.5 rounded-lg border border-red-200 transition-colors shadow-sm">
-                                    <i class="ph ph-trash text-lg"></i>
+                                <button onclick="window.excluirItemTodo('${item.nome}')" title="Excluir Produto Completo do Estoque" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition-colors shadow-sm whitespace-nowrap font-medium flex items-center">
+                                    <i class="ph ph-trash text-lg mr-1"></i> Excluir
                                 </button>
                             </div>
                         </td>
@@ -1428,7 +1435,7 @@
                                 <i class="ph ${icon} mr-1"></i> ${analise.status}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-right font-bold">${Number(l.qtd).toFixed(2)}</td>
+                        <td class="py-3 px-4 text-right font-bold">${window.fmtQtd(l.qtd)}</td>
                         <td class="py-3 px-4 text-center">
                             <div class="flex justify-center items-center space-x-2">
                                 ${btnLiberar}
@@ -1630,7 +1637,7 @@
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-900 font-medium text-sm">${item.nome}</td>
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-xs text-center font-bold">${item.lote || '-'}</td>
                         <td class="py-2 px-3 border-r border-gray-300 text-gray-600 text-xs text-center">${valStr}</td>
-                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-right font-bold">${Number(item.qtd).toFixed(2)} <span class="text-[10px] font-normal text-gray-500">${item.und}</span></td>
+                        <td class="py-2 px-3 border-r border-gray-300 text-gray-800 text-right font-bold">${window.fmtQtd(item.qtd)} <span class="text-[10px] font-normal text-gray-500">${item.und}</span></td>
                         <td class="py-2 px-3 text-center text-gray-400">_________________</td>
                     </tr>
                 `;
@@ -1675,11 +1682,11 @@
                         <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
                         <td class="py-3 px-4 font-bold text-gray-800">${l.nome}</td>
                         <td class="py-3 px-4 text-gray-600">${l.lote || '-'}</td>
-                        <td class="py-3 px-4 text-right text-gray-500">${Number(l.qtd).toFixed(2)} <span class="text-xs">${l.und}</span></td>
+                        <td class="py-3 px-4 text-right text-gray-500">${window.fmtQtd(l.qtd)} <span class="text-xs">${l.und}</span></td>
                         <td class="py-3 px-4 text-center">
-                            <input type="number" step="0.01" id="fisica-${l.id}" 
+                            <input type="number" step="0.001" id="fisica-${l.id}" 
                                 class="w-24 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" 
-                                placeholder="0.00" oninput="window.calcDivergencia('${l.id}', ${l.qtd})">
+                                placeholder="0.000" oninput="window.calcDivergencia('${l.id}', ${l.qtd})">
                         </td>
                         <td class="py-3 px-4 text-right font-bold" id="div-${l.id}">--</td>
                     </tr>
@@ -1708,10 +1715,10 @@
                 divSpan.innerText = 'OK (0.00)';
                 divSpan.className = 'py-3 px-4 text-right font-bold text-green-500';
             } else if (dif > 0) {
-                divSpan.innerText = `+${dif.toFixed(2)}`;
+                divSpan.innerText = `+${window.fmtQtd(dif)}`;
                 divSpan.className = 'py-3 px-4 text-right font-bold text-blue-500';
             } else {
-                divSpan.innerText = `${dif.toFixed(2)}`;
+                divSpan.innerText = `${window.fmtQtd(dif)}`;
                 divSpan.className = 'py-3 px-4 text-right font-bold text-red-500';
             }
         }
@@ -1737,7 +1744,7 @@
                         
                         batch.update(doc(db, 'estoque', l.id), { qtd: qtdFisica });
                         
-                        await registrarEdicao(l.nome, 'INVENTÁRIO', `Ajuste de Inventário Lote [${l.lote}]. Sis: ${Number(l.qtd).toFixed(2)} -> Físico: ${qtdFisica.toFixed(2)} (Divergência: ${dif > 0 ? '+'+dif.toFixed(2) : dif.toFixed(2)})`);
+                        await registrarEdicao(l.nome, 'INVENTÁRIO', `Ajuste de Inventário Lote [${l.lote}]. Sis: ${window.fmtQtd(l.qtd)} -> Físico: ${window.fmtQtd(qtdFisica)} (Divergência: ${dif > 0 ? '+'+window.fmtQtd(dif) : window.fmtQtd(dif)})`);
                         
                         batch.set(doc(collection(db, 'movimentos')), { 
                             tipo: 'AJUSTE', nome: l.nome, lote: l.lote, qtd: dif, und: l.und, data: new Date().toISOString(), usuario: usuarioAtual.email, nota: 'Ajuste de Inventário Cíclico' 
