@@ -1188,60 +1188,109 @@
                 
                 console.log("Texto extraído:", normFullText); // Útil para depuração
 
-                // Limpeza pesada de cabeçalhos e ruídos do sistema emissor do relatório
+                // Extração inteligente baseada no ESTOQUE ATUAL
+                // Pega todos os nomes únicos cadastrados no estoque e cria um mapa
+                const itensEstoqueMap = new Map();
+                estoque.forEach(l => {
+                    // Mapeia mesmo itens com qtd 0 para que possamos acusar a FALTA, mas exclui testes
+                    if (analisarValidade(l.validade, l.isTeste).status !== 'TESTE') {
+                         itensEstoqueMap.set(l.nome, (itensEstoqueMap.get(l.nome) || 0) + Number(l.qtd));
+                    }
+                });
+
+                // Ordena os itens do maior para o menor nome (Evita que "PÃO" encontre dentro de "PÃO DE QUEIJO" precocemente)
+                const nomesCadastrados = Array.from(itensEstoqueMap.keys()).sort((a, b) => b.length - a.length);
+
+                let importados = 0;
+
+                for (const nomeOriginal of nomesCadastrados) {
+                    // Cria uma regex flexível para cada produto CADASTRADO NO ESTOQUE
+                    // Procura: (Nome do Produto) + (espaços/caracteres perdidos curtos opcionais) + (Quantidade) + (Unidade)
+                    const escapedNome = nomeOriginal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    
+                    // Regex Explicada: 
+                    // 1. Acha o Nome Exato
+                    // 2. Permite até 5 caracteres quaisquer entre o nome e o peso (ex: " - ", " : ", ou lixos do OCR)
+                    // 3. Captura o Peso (numero com ponto ou virgula)
+                    // 4. Captura a Unidade (KG, UND, etc)
+                    const regex = new RegExp(escapedNome + '.{0,5}?([\\d.,]+)\\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\\b', 'gi');
+                    
+                    let matches = [...normFullText.matchAll(regex)];
+
+                    for (const match of matches) {
+                        let qtdStr = match[1].replace(',', '.'); 
+                        let und = match[2].toLowerCase();
+                        if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
+                        
+                        let qtd = parseFloat(qtdStr);
+
+                        if (!isNaN(qtd) && qtd > 0) {
+                            // Juntar na lista se o mesmo item aparecer de novo no relatório
+                            const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
+                            if (existingIndex >= 0) {
+                                listaSaidaTemporaria[existingIndex].qtd += qtd;
+                            } else {
+                                listaSaidaTemporaria.push({ nome: nomeOriginal, qtd, und: und });
+                            }
+                            importados++;
+                        }
+                    }
+                    // Remove o texto encontrado para evitar duplicidade de leitura
+                    normFullText = normFullText.replace(regex, ' ');
+                }
+
+                // Opcional: Regex Fallback para itens não cadastrados (Modo de varredura ampla limpo)
+                // Se sobrou itens não mapeados no banco (produtos totalmente novos), tenta ler o resto
+                // Agora filtramos palavras chave problemáticas.
                 const lixo = [
                     'CODIGO', 'PRODUTO', 'PESO', 'RECEITAS', 'RECEITA', 
                     'LISTA DE PRODUCAO', '24 HORAS', '48 HORAS', 
-                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES 24H', 'PAES - 24H'
+                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES 24H', 'PAES - 24H', 'PAES'
                 ];
                 lixo.forEach(palavra => { 
                     const reg = new RegExp('\\b' + palavra.replace(/-/g, '\\-') + '\\b', 'gi');
                     normFullText = normFullText.replace(reg, ' '); 
                 });
-                normFullText = normFullText.replace(/-\s*24H/gi, ' '); 
-                normFullText = normFullText.replace(/-\s*48H/gi, ' ');
-                normFullText = normFullText.replace(/\s+/g, ' ').trim(); 
-
-                // Regex magnética para puxar (Código Opcional) PRODUTO + PESO + UNIDADE
-                const regex = /\b(?:(\d+)\s+)?([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\b/gi;
-                let matches = [...normFullText.matchAll(regex)];
                 
-                let importados = 0;
+                // Limpa numeração isolada no início (códigos) para evitar "3 PAO"
+                normFullText = normFullText.replace(/\b\d+\s+([A-Z])/g, '$1');
+
+                const regexFallback = /\b([A-Z][A-Z0-9\s\-]{2,}?[A-Z])\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)\b/gi;
+                let fallbackMatches = [...normFullText.matchAll(regexFallback)];
+                
                 let criadosZeros = 0;
                 const batch = writeBatch(db);
                 let requiresBatchCommit = false;
 
-                const itensCadastrados = new Set(estoque.map(l => l.nome));
-
-                for (const match of matches) {
-                    let nomeOriginal = match[2].trim().replace(/\s+/g, ' '); 
+                for (const match of fallbackMatches) {
+                    let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
                     
-                    if (nomeOriginal.length < 3) continue;
+                    if (nomeOriginal.length < 3 || itensEstoqueMap.has(nomeOriginal)) continue; // Já lido acima
 
-                    let qtdStr = match[3].replace(',', '.'); 
-                    let und = match[4].toLowerCase();
+                    let qtdStr = match[2].replace(',', '.'); 
+                    let und = match[3].toLowerCase();
                     if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
                     
                     let qtd = parseFloat(qtdStr);
 
                     if (!isNaN(qtd) && qtd > 0) {
-                        if (!itensCadastrados.has(nomeOriginal)) {
-                            // Cadastrar novo item vazio (saldo zero)
-                            const novoLoteRef = doc(collection(db, 'estoque'));
-                            batch.set(novoLoteRef, {
-                                nome: nomeOriginal,
-                                setor: 'N/A',
-                                lote: '-',
-                                qtd: 0,
-                                und: und, 
-                                validade: '',
-                                isTeste: false
-                            });
-                            requiresBatchCommit = true;
-                            itensCadastrados.add(nomeOriginal);
-                            estoque.push({ id: novoLoteRef.id, nome: nomeOriginal, qtd: 0, und: und });
-                            criadosZeros++;
-                        }
+                         // Cadastrar novo item vazio (saldo zero) no banco
+                        const novoLoteRef = doc(collection(db, 'estoque'));
+                        batch.set(novoLoteRef, {
+                            nome: nomeOriginal,
+                            setor: 'N/A',
+                            lote: '-',
+                            qtd: 0,
+                            und: und, 
+                            validade: '',
+                            isTeste: false
+                        });
+                        requiresBatchCommit = true;
+                        
+                        // Atualiza as listas locais para evitar duplicação em tempo real
+                        estoque.push({ id: novoLoteRef.id, nome: nomeOriginal, qtd: 0, und: und });
+                        itensEstoqueMap.set(nomeOriginal, 0); // Marca como cadastrado
+                        criadosZeros++;
 
                         const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
                         if (existingIndex >= 0) {
