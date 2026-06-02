@@ -91,13 +91,21 @@
     </div>
 
     <!-- Main App Container -->
-    <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden">
+    <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden w-full relative">
         
+        <!-- Sidebar Overlay (Tablet/Mobile) -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-gray-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
+
         <!-- Sidebar -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-10 shrink-0">
-            <div class="h-16 flex items-center px-6 border-b border-gray-100">
-                <img src="logo.png" alt="Logo" class="h-8 mr-2 object-contain" onerror="this.onerror=null; this.src='https://via.placeholder.com/80x30?text=LOGO';">
-                <h1 class="text-lg font-bold text-gray-900">Expedição OS</h1>
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-30 shrink-0 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-gray-100">
+                <div class="flex items-center">
+                    <img src="logo.png" alt="Logo" class="h-8 mr-2 object-contain" onerror="this.onerror=null; this.src='https://via.placeholder.com/80x30?text=LOGO';">
+                    <h1 class="text-lg font-bold text-gray-900">Expedição OS</h1>
+                </div>
+                <button onclick="window.toggleSidebar()" class="md:hidden text-gray-400 hover:text-gray-700">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
             </div>
             
             <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
@@ -138,8 +146,13 @@
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden">
             <!-- Top Header -->
-            <header class="h-16 bg-white flex items-center justify-between px-8 shadow-sm z-0 shrink-0">
-                <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
+            <header class="h-16 bg-white flex items-center justify-between px-4 md:px-8 shadow-sm z-10 shrink-0">
+                <div class="flex items-center">
+                    <button onclick="window.toggleSidebar()" class="md:hidden mr-3 text-gray-500 hover:text-gray-800 p-2 rounded-lg bg-gray-50 border border-gray-200 focus:outline-none">
+                        <i class="ph ph-list text-2xl"></i>
+                    </button>
+                    <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
+                </div>
                 <div class="flex items-center space-x-4">
                     <span class="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-sm font-medium flex items-center border border-brand-200 shadow-sm">
                         <i class="ph-fill ph-lightning mr-1"></i> Banco Universal
@@ -148,7 +161,7 @@
             </header>
 
             <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-8" id="main-container">
+            <div class="flex-1 overflow-y-auto p-4 md:p-8" id="main-container">
                 
                 <!-- Datalists para Autocomplete -->
                 <datalist id="estoque-itens-list"></datalist>
@@ -156,8 +169,8 @@
 
                 <!-- VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="space-y-6 block">
-                    <!-- Grid de Métricas -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Grid de Métricas (Responsivo) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="text-sm font-bold text-gray-500 uppercase">Total em Estoque</h4>
@@ -254,8 +267,8 @@
                             </div>
 
                             <div class="pt-2 text-right">
-                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center">
-                                    <i class="ph ph-plus mr-2"></i> Incluir na Lista
+                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-8 rounded-lg transition-colors inline-flex items-center text-lg w-full md:w-auto justify-center">
+                                    <i class="ph ph-plus mr-2 text-xl"></i> Incluir na Lista
                                 </button>
                             </div>
                         </form>
@@ -280,8 +293,8 @@
                                 <tbody id="tbody-lista-entrada" class="divide-y divide-gray-50"></tbody>
                             </table>
                         </div>
-                        <button id="btn-salvar-entradas" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center">
-                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar
+                        <button id="btn-salvar-entradas" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-4 rounded-lg transition-colors flex justify-center items-center text-lg shadow-md">
+                            <i class="ph ph-check-circle mr-2 text-2xl"></i> Confirmar Entradas
                         </button>
                     </div>
                 </div>
@@ -300,8 +313,8 @@
                             <div>
                                 <!-- Aceita PDF e Imagens (Prints) -->
                                 <input type="file" id="upload-pdf" accept="application/pdf, image/png, image/jpeg, image/jpg" class="hidden" onchange="window.lerPDFSaida(event)">
-                                <button type="button" id="btn-importar-pdf" onclick="document.getElementById('upload-pdf').click()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-lg transition-colors inline-flex items-center text-sm border border-indigo-200 shadow-sm">
-                                    <i class="ph ph-scan mr-2 text-lg"></i> Importar Relatório (PDF ou Print)
+                                <button type="button" id="btn-importar-pdf" onclick="document.getElementById('upload-pdf').click()" class="w-full md:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-3 px-6 rounded-lg transition-colors inline-flex items-center justify-center text-base border border-indigo-200 shadow-sm">
+                                    <i class="ph ph-scan mr-2 text-xl"></i> Importar Relatório (PDF ou Print)
                                 </button>
                             </div>
                         </div>
@@ -325,8 +338,8 @@
                             <div id="sai-preview-box" class="min-h-[20px]"></div>
 
                             <div class="pt-2 text-right">
-                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center">
-                                    <i class="ph ph-plus mr-2"></i> Incluir na Lista de Saída
+                                <button type="submit" class="w-full md:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-8 rounded-lg transition-colors inline-flex justify-center items-center text-lg">
+                                    <i class="ph ph-plus mr-2 text-xl"></i> Incluir na Lista
                                 </button>
                             </div>
                         </form>
@@ -347,8 +360,8 @@
                                 <tbody id="tbody-lista-saida" class="divide-y divide-gray-50"></tbody>
                             </table>
                         </div>
-                        <button id="btn-salvar-saidas" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center shadow-lg">
-                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar Baixas
+                        <button id="btn-salvar-saidas" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-4 px-4 rounded-lg transition-colors flex justify-center items-center shadow-lg text-lg">
+                            <i class="ph ph-check-circle mr-2 text-2xl"></i> Confirmar Baixas
                         </button>
                     </div>
                 </div>
@@ -359,7 +372,7 @@
                         <div class="p-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                             <div class="flex flex-col">
                                 <h3 class="font-bold text-gray-800 text-lg">Estoque Consolidado</h3>
-                                <div class="flex space-x-3 text-[10px] font-medium mt-1">
+                                <div class="flex flex-wrap gap-2 text-[10px] font-medium mt-1">
                                     <span class="flex items-center text-green-600"><div class="w-2.5 h-2.5 rounded-full bg-green-500 mr-1"></div> Liberado</span>
                                     <span class="flex items-center text-yellow-600"><div class="w-2.5 h-2.5 rounded-full bg-yellow-400 mr-1"></div> Alerta ( < 35d )</span>
                                     <span class="flex items-center text-red-600"><div class="w-2.5 h-2.5 rounded-full bg-red-500 mr-1"></div> Bloqueado ( < 30d )</span>
@@ -369,9 +382,9 @@
                             <div class="flex flex-col sm:flex-row w-full md:w-auto gap-3">
                                 <div class="relative flex-1 md:w-64">
                                     <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                    <input type="text" id="search-estoque" placeholder="Buscar item..." class="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-colors">
+                                    <input type="text" id="search-estoque" placeholder="Buscar item..." class="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-colors">
                                 </div>
-                                <select id="sort-estoque" class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-colors">
+                                <select id="sort-estoque" class="bg-white border border-gray-200 rounded-lg px-3 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-colors">
                                     <option value="nome-asc">Ordem Alfabética (A-Z)</option>
                                     <option value="nome-desc">Ordem Alfabética (Z-A)</option>
                                     <option value="qtd-desc">Maior Quantidade</option>
@@ -381,7 +394,7 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto flex-1">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
                                 <thead class="sticky top-0 bg-white z-10 shadow-sm">
                                     <tr class="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
                                         <th class="p-4 font-bold">Item</th>
@@ -410,47 +423,47 @@
                         <div class="flex flex-col md:flex-row gap-4 mb-4">
                             <div class="flex-1">
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Filtrar por Setor</label>
-                                <select id="inv-setor-filtro" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                <select id="inv-setor-filtro" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
                                     <option value="">Todos os Setores</option>
                                     <!-- JS preenche -->
                                 </select>
                             </div>
                             <div class="flex-1">
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Buscar Item</label>
-                                <input type="text" id="inv-busca-filtro" placeholder="Nome do item..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
+                                <input type="text" id="inv-busca-filtro" placeholder="Nome do item..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition-colors">
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-center mb-2 mt-6">
                             <span class="text-sm font-bold text-gray-700">Selecione os itens para realizar o inventário:</span>
-                            <div class="space-x-3 text-sm">
+                            <div class="space-x-3 text-sm flex-shrink-0">
                                 <button type="button" onclick="window.selectAllInv()" class="text-brand-600 hover:text-brand-800 font-bold transition-colors">Marcar Visíveis</button>
                                 <button type="button" onclick="window.clearAllInv()" class="text-gray-500 hover:text-gray-700 transition-colors">Limpar Tudo</button>
                             </div>
                         </div>
 
                         <!-- Container de Checkboxes (Itens Únicos) -->
-                        <div id="inv-items-container" class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6 bg-gray-50">
+                        <div id="inv-items-container" class="max-h-[50vh] overflow-y-auto border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6 bg-gray-50">
                             <!-- JS preenche -->
                         </div>
 
                         <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-gray-100">
-                            <button onclick="window.gerarFichaInventario()" class="flex-1 bg-gray-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center shadow-md">
-                                <i class="ph ph-printer mr-2 text-xl"></i> Imprimir Ficha de Contagem
+                            <button onclick="window.gerarFichaInventario()" class="flex-1 bg-gray-800 hover:bg-black text-white font-bold py-4 px-4 rounded-lg transition-colors flex justify-center items-center shadow-md text-lg">
+                                <i class="ph ph-printer mr-2 text-2xl"></i> Imprimir Ficha de Contagem
                             </button>
-                            <button onclick="window.abrirLancamentoInventario()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center shadow-md">
-                                <i class="ph ph-keyboard mr-2 text-xl"></i> Lançar Contagem Digital
+                            <button onclick="window.abrirLancamentoInventario()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-4 rounded-lg transition-colors flex justify-center items-center shadow-md text-lg">
+                                <i class="ph ph-keyboard mr-2 text-2xl"></i> Lançar Contagem Digital
                             </button>
                         </div>
                     </div>
 
                     <!-- AREA: LANÇAMENTO DIGITAL DE CONTAGEM -->
                     <div id="inv-lancamento-area" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-5xl mx-auto no-print">
-                        <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                             <h3 class="text-xl font-bold text-gray-800 flex items-center">
                                 <i class="ph ph-keyboard text-brand-500 mr-2"></i> Lançamento de Contagem Física
                             </h3>
-                            <button onclick="window.fecharLancamentoInventario()" class="text-gray-500 hover:text-gray-800 font-medium text-sm flex items-center">
+                            <button onclick="window.fecharLancamentoInventario()" class="text-gray-500 hover:text-gray-800 font-medium text-sm flex items-center bg-gray-100 px-4 py-2 rounded-lg">
                                 <i class="ph ph-arrow-left mr-1"></i> Voltar à Seleção
                             </button>
                         </div>
@@ -458,7 +471,7 @@
                         <p class="text-sm text-gray-600 mb-4">Insira a quantidade física encontrada para cada lote. O sistema calculará a divergência e fará os ajustes automaticamente.</p>
                         
                         <div class="overflow-x-auto border border-gray-200 rounded-lg mb-6">
-                            <table class="w-full text-left border-collapse text-sm">
+                            <table class="w-full text-left border-collapse text-sm min-w-[600px]">
                                 <thead class="bg-gray-50">
                                     <tr class="text-gray-500 border-b border-gray-200">
                                         <th class="py-3 px-4 font-semibold">Setor</th>
@@ -475,8 +488,8 @@
                             </table>
                         </div>
 
-                        <button id="btn-aplicar-ajustes" onclick="window.salvarAjustesInventario()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center shadow-lg">
-                            <i class="ph ph-check-circle mr-2 text-xl"></i> Confirmar e Aplicar Ajustes no Estoque
+                        <button id="btn-aplicar-ajustes" onclick="window.salvarAjustesInventario()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-lg transition-colors flex justify-center items-center shadow-lg text-lg">
+                            <i class="ph ph-check-circle mr-2 text-2xl"></i> Confirmar e Aplicar Ajustes no Estoque
                         </button>
                     </div>
 
@@ -506,11 +519,11 @@
                                 <!-- JS -->
                             </tbody>
                         </table>
-                        <div class="text-center no-print flex justify-center gap-4">
-                            <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-8 rounded-lg transition-colors inline-flex items-center shadow-lg">
+                        <div class="text-center no-print flex flex-col md:flex-row justify-center gap-4">
+                            <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-8 rounded-lg transition-colors inline-flex justify-center items-center shadow-lg w-full md:w-auto">
                                 <i class="ph ph-printer mr-2 text-xl"></i> Imprimir Ficha Agora
                             </button>
-                            <button onclick="document.getElementById('print-area').classList.add('hidden')" class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-bold py-3 px-8 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                            <button onclick="document.getElementById('print-area').classList.add('hidden')" class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-bold py-3 px-8 rounded-lg transition-colors inline-flex justify-center items-center shadow-sm w-full md:w-auto">
                                 <i class="ph ph-x mr-2 text-xl"></i> Fechar Prévia
                             </button>
                         </div>
@@ -526,25 +539,25 @@
         <div class="modal-overlay absolute inset-0 bg-gray-900/40" onclick="window.fecharModalItem()"></div>
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col relative z-10 overflow-hidden border border-gray-100">
             
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 shrink-0 gap-4">
                 <div>
                     <h2 id="modal-item-nome" class="text-2xl font-bold text-gray-800">Nome do Produto</h2>
                     <p class="text-sm text-gray-500 mt-1">Média de Saída (30 dias): <strong id="modal-item-media" class="text-brand-600">0.00 und/dia</strong></p>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="window.abrirModalEdicoes()" class="flex items-center text-sm bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium">
-                        <i class="ph ph-clock-counter-clockwise mr-2 text-lg"></i> Histórico de Edições
+                <div class="flex gap-3 w-full md:w-auto">
+                    <button onclick="window.abrirModalEdicoes()" class="flex-1 md:flex-none flex justify-center items-center text-sm bg-white border border-gray-200 text-gray-600 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors shadow-sm font-medium">
+                        <i class="ph ph-clock-counter-clockwise mr-2 text-xl"></i> Histórico
                     </button>
-                    <button onclick="window.fecharModalItem()" class="text-gray-400 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition-colors">
-                        <i class="ph ph-x text-lg"></i>
+                    <button onclick="window.fecharModalItem()" class="text-gray-500 hover:text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-xl p-3 transition-colors">
+                        <i class="ph ph-x text-xl"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="p-6 overflow-y-auto flex-1 bg-white">
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 bg-white">
                 <h3 class="font-bold text-gray-800 mb-4">Lotes Disponíveis / Registrados</h3>
                 <div class="overflow-x-auto border border-gray-100 rounded-lg">
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="w-full text-left border-collapse text-sm min-w-[600px]">
                         <thead class="bg-gray-50">
                             <tr class="text-gray-500 border-b border-gray-100">
                                 <th class="py-3 px-4 font-semibold">Lote</th>
@@ -553,7 +566,7 @@
                                 <th class="py-3 px-4 font-semibold">Validade</th>
                                 <th class="py-3 px-4 font-semibold">Status</th>
                                 <th class="py-3 px-4 text-right font-semibold">Qtd</th>
-                                <th class="py-3 px-4 text-center font-semibold w-28">Ações</th>
+                                <th class="py-3 px-4 text-center font-semibold w-32">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="modal-lotes-tbody" class="divide-y divide-gray-100">
@@ -568,31 +581,69 @@
     <!-- MODAL: EDITAR LOTE -->
     <div id="modal-edit-lote" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="modal-overlay absolute inset-0 bg-gray-900/60"></div>
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-gray-100">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-gray-100">
             <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-pencil-simple text-brand-500 mr-2 text-lg"></i> Editar Lote</h3>
-                <button onclick="window.fecharModalEdicao()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
+                <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-pencil-simple text-brand-500 mr-2 text-xl"></i> Editar Lote</h3>
+                <button onclick="window.fecharModalEdicao()" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-x text-xl"></i></button>
             </div>
             <form id="form-edicao-lote" class="p-5 space-y-4">
                 <input type="hidden" id="edit-lote-id">
-                <input type="hidden" id="edit-item-nome">
+                <input type="hidden" id="edit-lote-nome-produto">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Número do Lote</label>
-                    <input type="text" id="edit-lote-num" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
+                    <input type="text" id="edit-lote-num" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-400 outline-none text-base">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
-                        <input type="number" step="0.001" id="edit-lote-qtd" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
+                        <input type="number" step="0.001" id="edit-lote-qtd" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-400 outline-none text-base">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Validade</label>
-                        <input type="date" id="edit-lote-val" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-400 outline-none">
+                        <input type="date" id="edit-lote-val" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-400 outline-none text-base">
                     </div>
                 </div>
                 <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="window.fecharModalEdicao()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition-colors">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-lg transition-colors">Salvar Alteração</button>
+                    <button type="button" onclick="window.fecharModalEdicao()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-colors text-lg">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition-colors text-lg">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOVO MODAL: EDITAR ITEM GERAL -->
+    <div id="modal-edit-item" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0 bg-gray-900/60" onclick="window.fecharModalEditItem()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-gray-100">
+            <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-pencil-simple text-blue-500 mr-2 text-xl"></i> Editar Produto Inteiro</h3>
+                <button onclick="window.fecharModalEditItem()" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <form id="form-edit-item-geral" class="p-5 space-y-4">
+                <input type="hidden" id="edit-item-geral-oldnome">
+                <div class="bg-blue-50 text-blue-800 p-3 rounded-lg text-xs font-medium border border-blue-100 mb-4">
+                    <i class="ph-fill ph-info mr-1"></i> A alteração refletirá em <strong>todos os lotes</strong> deste produto cadastrados no banco.
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Novo Nome do Produto</label>
+                    <input type="text" id="edit-item-geral-newnome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-400 outline-none text-base font-bold text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unidade Padrão</label>
+                    <select id="edit-item-geral-und" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-400 outline-none text-base">
+                        <option value="und">Unidade (und)</option>
+                        <option value="kg">Quilograma (kg)</option>
+                        <option value="cx">Caixa (cx)</option>
+                        <option value="l">Litro (l)</option>
+                        <option value="ml">Mililitro (ml)</option>
+                        <option value="pct">Pacote (pct)</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="window.fecharModalEditItem()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-colors text-lg">Cancelar</button>
+                    <button type="submit" id="btn-save-item-geral" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors text-lg flex justify-center items-center">
+                        <i class="ph ph-check-circle mr-2"></i> Salvar
+                    </button>
                 </div>
             </form>
         </div>
@@ -601,10 +652,10 @@
     <!-- MODAL: HISTÓRICO DE EDIÇÕES -->
     <div id="modal-historico" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="modal-overlay absolute inset-0 bg-gray-900/60" onclick="window.fecharModalHistorico()"></div>
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col relative z-10 overflow-hidden border border-gray-100">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col relative z-10 overflow-hidden border border-gray-100">
             <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-clock-counter-clockwise text-brand-500 mr-2 text-lg"></i> Registro de Alterações: <span id="hist-item-nome" class="ml-1 text-gray-600"></span></h3>
-                <button onclick="window.fecharModalHistorico()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x text-lg"></i></button>
+                <h3 class="font-bold text-gray-800 flex items-center"><i class="ph ph-clock-counter-clockwise text-brand-500 mr-2 text-xl"></i> Histórico: <span id="hist-item-nome" class="ml-2 text-gray-600 font-medium"></span></h3>
+                <button onclick="window.fecharModalHistorico()" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div class="p-5 overflow-y-auto flex-1">
                 <ul id="lista-historico" class="space-y-4 text-sm">
@@ -615,9 +666,9 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow border border-gray-100" role="alert">
-        <div id="toast-icon" class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg"></div>
-        <div id="toast-msg" class="ml-3 text-sm font-normal pr-2"></div>
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center p-4 mb-4 text-gray-500 bg-white rounded-2xl shadow-xl border border-gray-100" role="alert">
+        <div id="toast-icon" class="inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl"></div>
+        <div id="toast-msg" class="ml-3 text-sm font-medium pr-2 text-gray-700"></div>
     </div>
 
     <script type="module">
@@ -662,7 +713,6 @@
 
         document.getElementById('ent-data').valueAsDate = new Date();
 
-        // Helper global de formatação para exibição: até 3 casas decimais
         window.fmtQtd = function(val) {
             return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3, useGrouping: false });
         };
@@ -674,18 +724,30 @@
 
             msgContainer.innerText = message;
             if (type === 'success') {
-                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg';
-                iconContainer.innerHTML = '<i class="ph ph-check text-xl"></i>';
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 text-green-600 bg-green-100 rounded-xl';
+                iconContainer.innerHTML = '<i class="ph ph-check-circle text-2xl"></i>';
             } else {
-                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg';
-                iconContainer.innerHTML = '<i class="ph ph-warning text-xl"></i>';
+                iconContainer.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 text-red-600 bg-red-100 rounded-xl';
+                iconContainer.innerHTML = '<i class="ph ph-warning-circle text-2xl"></i>';
             }
 
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
         };
 
-        // --- CONTROLE DE AUTENTICAÇÃO ---
+        // Sidebar para Mobile/Tablet
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
         const provider = new GoogleAuthProvider();
         document.getElementById('btn-login').addEventListener('click', async () => {
             try { await signInWithPopup(auth, provider); } 
@@ -727,7 +789,6 @@
             }
         });
 
-        // --- SINCRONIZAÇÃO COM FIRESTORE ---
         function iniciarListenersBanco() {
             unsubEstoque = onSnapshot(collection(db, 'estoque'), (snapshot) => {
                 estoque = [];
@@ -761,9 +822,8 @@
             }
         }
 
-        // --- NAVEGAÇÃO ---
         const views = ['dashboard', 'entrada', 'saida', 'estoque', 'inventario'];
-        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Estoque', 'inventario': 'Inventário Cíclico' };
+        const titles = { 'dashboard': 'Painel Inicial', 'entrada': 'Registro de Entrada', 'saida': 'Saída de Materiais (PVPS)', 'estoque': 'Gestão do Estoque', 'inventario': 'Inventário Cíclico' };
 
         window.navigate = function(viewId) {
             views.forEach(v => {
@@ -777,10 +837,15 @@
             document.getElementById(`nav-${viewId}`).classList.add('sidebar-active');
             document.getElementById('page-title').innerText = titles[viewId] || 'Gestão';
 
+            // Auto-close sidebar on mobile after navigation
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('sidebar-overlay').classList.add('hidden');
+            }
+
             atualizarUI();
         }
 
-        // --- LÓGICA DE NEGÓCIO E VALIDADE ---
         function analisarValidade(dataValidadeStr, isTeste = false) {
             if (!dataValidadeStr) return { status: 'LIBERADO', diasRestantes: 999 };
             const hoje = new Date();
@@ -828,7 +893,6 @@
                     if (dataMov >= limiteAtras) {
                         if (nomeItem && mov.nome !== nomeItem) return; 
                         if (!saidasPorItem[mov.nome]) saidasPorItem[mov.nome] = { qtd: 0, und: mov.und };
-                        // Usa qtdAtendida se existir, senão usa qtd
                         saidasPorItem[mov.nome].qtd += Number(mov.qtdAtendida || mov.qtd);
                     }
                 }
@@ -842,7 +906,6 @@
             return saidasPorItem;
         }
 
-        // --- DASHBOARD ---
         function updateDashboard() {
             let totalItens = 0, alertas = 0, bloqueados = 0, testes = 0;
 
@@ -868,15 +931,15 @@
                 return;
             }
 
-            let html = '<ul class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">';
+            let html = '<ul class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">';
             for (const [nome, data] of Object.entries(saidasPorItem)) {
                 let mediaDiaria = window.fmtQtd(data.qtd / 30);
                 html += `
-                    <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <li class="flex flex-col md:flex-row justify-between md:items-center bg-gray-50 p-4 rounded-xl border border-gray-100 gap-2">
                         <span class="font-medium text-gray-800">${nome}</span>
-                        <div class="text-right">
+                        <div class="md:text-right">
                             <span class="text-xs text-gray-500 block">Consumo Diário</span>
-                            <span class="font-bold text-brand-600">${mediaDiaria} <span class="text-xs font-normal">${data.und}/dia</span></span>
+                            <span class="font-bold text-brand-600 text-lg">${mediaDiaria} <span class="text-sm font-normal">${data.und}/dia</span></span>
                         </div>
                     </li>`;
             }
@@ -884,7 +947,6 @@
             container.innerHTML = html;
         }
 
-        // --- ENTRADA MÚLTIPLA ---
         document.getElementById('form-entrada-item').addEventListener('submit', function(e) {
             e.preventDefault();
             const nome = document.getElementById('ent-nome').value.trim().toUpperCase();
@@ -915,9 +977,9 @@
             if(listaEntradaTemporaria.length === 0) { box.classList.add('hidden'); return; }
             box.classList.remove('hidden');
             listaEntradaTemporaria.forEach((item, index) => {
-                const valStr = new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR');
+                const valStr = item.validade ? new Date(item.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
                 const badgeTeste = item.isTeste ? '<span class="px-2 py-1 text-xs font-bold rounded bg-purple-100 text-purple-800 uppercase">Teste CQ</span>' : '-';
-                tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="py-3 font-medium">${item.nome}</td><td class="py-3 text-gray-500">${item.setor||'N/A'}</td><td class="py-3">${item.lote}</td><td class="py-3">${valStr}</td><td class="py-3 text-center">${badgeTeste}</td><td class="py-3 text-right font-bold">${window.fmtQtd(item.qtd)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center"><button type="button" onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-50 last:border-0"><td class="py-3 font-medium px-2">${item.nome}</td><td class="py-3 text-gray-500 text-xs px-2">${item.setor||'N/A'}</td><td class="py-3 px-2">${item.lote}</td><td class="py-3 px-2">${valStr}</td><td class="py-3 text-center px-2">${badgeTeste}</td><td class="py-3 text-right font-bold px-2">${window.fmtQtd(item.qtd)} <span class="font-normal text-xs text-gray-500">${item.und}</span></td><td class="py-3 text-center px-2"><button type="button" onclick="window.removerItemEntrada(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td></tr>`;
             });
         }
 
@@ -925,7 +987,7 @@
             if(listaEntradaTemporaria.length === 0) return;
             const btn = document.getElementById('btn-salvar-entradas');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Confirmando...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-2xl"></i> Confirmando...';
             btn.disabled = true;
 
             try {
@@ -951,7 +1013,150 @@
             }
         });
 
-        // --- SAÍDA LOGIC E PREVIEW ---
+        window.lerPDFSaida = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const btn = document.getElementById('btn-importar-pdf');
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Lendo Arquivo...';
+            btn.disabled = true;
+
+            try {
+                let fullText = '';
+                
+                if (file.type.startsWith('image/')) {
+                    btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Executando OCR...';
+                    try {
+                        const worker = await window.Tesseract.createWorker('por');
+                        const ret = await worker.recognize(file);
+                        fullText = ret.data.text;
+                        await worker.terminate();
+                    } catch (ocrErr) {
+                        throw new Error('Falha no OCR. Tente um PDF puro ou verifique sua conexão.');
+                    }
+                } else if (file.type === 'application/pdf') {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        
+                        const items = textContent.items;
+                        items.sort((a, b) => {
+                            if (Math.abs(b.transform[5] - a.transform[5]) > 5) return b.transform[5] - a.transform[5];
+                            return a.transform[4] - b.transform[4];
+                        });
+                        
+                        let lastY = null;
+                        items.forEach(item => {
+                            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) fullText += '\n'; 
+                            fullText += item.str + ' ';
+                            lastY = item.transform[5];
+                        });
+                        fullText += '\n';
+                    }
+                } else {
+                    throw new Error("Formato não suportado");
+                }
+
+                // Normalização inicial sem apagar os \n
+                let normFullText = fullText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                
+                // Blacklist rigorosa de palavras inteiras (se houver essas palavras, ignoramos a linha)
+                const ignorarLinhaSeTiver = [
+                    'CÓDIGO', 'CODIGO', 'PRODUTO', 'PESO', 'RECEITA', 'RECEITAS', 
+                    'LISTA DE PRODUCAO', '24 HORAS', '48 HORAS', 
+                    'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES-24H', 'PAES- 24H', 'TOTAL'
+                ];
+
+                let importados = 0;
+                let criadosZeros = 0;
+                const batch = writeBatch(db);
+                let requiresBatchCommit = false;
+                const itensCadastrados = new Set(estoque.map(l => l.nome));
+
+                // Processar linha por linha de forma independente
+                const linhas = normFullText.split('\n');
+                
+                for (let linha of linhas) {
+                    linha = linha.replace(/\s+/g, ' ').trim();
+                    if (!linha) continue;
+
+                    let isHeader = false;
+                    for (const palavraRuim of ignorarLinhaSeTiver) {
+                        if (linha.includes(palavraRuim)) {
+                            isHeader = true;
+                            break;
+                        }
+                    }
+                    if (isHeader) continue; // Pula cabeçalhos e afins
+
+                    // Regex Rigorosa: 
+                    // 1. (Opcional) número solto no começo -> ^(?:\d+\s+)?
+                    // 2. O Nome do produto (Captura G1): Letras/Números/Hífens. Pelo menos 3 letras -> ([A-Z][A-Z0-9\s\-]+?)
+                    // 3. O Peso (Captura G2): número com ponto ou vírgula -> \s+([\d.,]+)
+                    // 4. A unidade (Captura G3) -> \s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)
+                    // 5. Opcional: lixo/receitas no final -> (?:\s+\d+)?$
+                    
+                    // Ajuste Regex para achar match em qualquer parte da linha válida que sobrou
+                    const regexItem = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]+?)\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)(?:\s+\d+)?\b/gi;
+                    let matches = [...linha.matchAll(regexItem)];
+
+                    for (const match of matches) {
+                        let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
+                        if (nomeOriginal.length < 3) continue;
+
+                        let qtdStr = match[2].replace(',', '.'); 
+                        let und = match[3].toLowerCase();
+                        if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
+                        
+                        let qtd = parseFloat(qtdStr);
+
+                        if (!isNaN(qtd) && qtd > 0) {
+                            if (!itensCadastrados.has(nomeOriginal)) {
+                                const novoLoteRef = doc(collection(db, 'estoque'));
+                                batch.set(novoLoteRef, {
+                                    nome: nomeOriginal, setor: 'N/A', lote: '-', qtd: 0, und: und, validade: '', isTeste: false
+                                });
+                                requiresBatchCommit = true;
+                                itensCadastrados.add(nomeOriginal);
+                                estoque.push({ id: novoLoteRef.id, nome: nomeOriginal, qtd: 0, und: und });
+                                criadosZeros++;
+                            }
+
+                            const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
+                            if (existingIndex >= 0) {
+                                listaSaidaTemporaria[existingIndex].qtd += qtd;
+                            } else {
+                                listaSaidaTemporaria.push({ nome: nomeOriginal, qtd, und: und });
+                            }
+                            importados++;
+                        }
+                    }
+                }
+
+                if (requiresBatchCommit) await batch.commit();
+
+                if (importados > 0) {
+                    renderListaSaida();
+                    revalidarSaldoSaida();
+                    let msg = `${importados} linha(s) importada(s) do arquivo.`;
+                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) vazio(s)).`;
+                    window.showToast(msg, 'success');
+                } else {
+                    window.showToast('Nenhum item válido identificado no arquivo.', 'error');
+                }
+
+            } catch (error) {
+                console.error(error);
+                window.showToast('Falha: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = '<i class="ph ph-scan mr-2 text-xl"></i> Importar Relatório (PDF ou Print)';
+                btn.disabled = false;
+                event.target.value = ''; 
+            }
+        }
+
         const inputSaiNome = document.getElementById('sai-nome');
         const inputSaiQtd = document.getElementById('sai-qtd');
         
@@ -1007,11 +1212,11 @@
             }
 
             if (qtdRestante > 0) {
-                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-2 rounded border border-red-100">Serão baixados o possível. Faltará ${window.fmtQtd(qtdRestante)} no estoque.</p>`;
+                previewBox.innerHTML = `<p class="text-red-500 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-100 shadow-sm">Serão baixados o possível. Faltará ${window.fmtQtd(qtdRestante)} no estoque físico.</p>`;
             } else {
-                let html = '<div class="text-xs bg-blue-50 p-3 rounded border border-blue-100"><strong class="text-blue-800 flex items-center mb-1"><i class="ph ph-magic-wand mr-1"></i> Lotes que sofrerão baixa (PVPS):</strong><ul class="space-y-1">';
+                let html = '<div class="text-xs bg-blue-50 p-3 rounded-xl border border-blue-100 shadow-sm"><strong class="text-blue-800 flex items-center mb-2"><i class="ph ph-magic-wand mr-1 text-base"></i> Lotes que sofrerão baixa (PVPS):</strong><ul class="space-y-1">';
                 lotesUsados.forEach(u => {
-                    html += `<li class="text-blue-700 flex justify-between"><span>Lote: <strong>${u.lote}</strong></span> <span>- ${window.fmtQtd(u.qtd)} ${u.und}</span></li>`;
+                    html += `<li class="text-blue-700 flex justify-between"><span>Lote: <strong class="ml-1">${u.lote}</strong></span> <span>- ${window.fmtQtd(u.qtd)} ${u.und}</span></li>`;
                 });
                 html += '</ul></div>';
                 previewBox.innerHTML = html;
@@ -1023,7 +1228,6 @@
             const nome = inputSaiNome.value.trim().toUpperCase(); 
             const qtd = parseFloat(inputSaiQtd.value);
             
-            // Allow adding to list even if missing balance (we just flag it in the list UI)
             const itemEstoque = estoque.find(l => l.nome === nome);
             const und = itemEstoque ? itemEstoque.und : 'kg';
             
@@ -1041,11 +1245,8 @@
             if(listaSaidaTemporaria.length === 0) { box.classList.add('hidden'); return; }
             box.classList.remove('hidden');
             
-            // Map the items locally to consolidate same items for disp check
             const agrupadoSaida = new Map();
-            listaSaidaTemporaria.forEach(i => {
-                agrupadoSaida.set(i.nome, (agrupadoSaida.get(i.nome) || 0) + i.qtd);
-            });
+            listaSaidaTemporaria.forEach(i => { agrupadoSaida.set(i.nome, (agrupadoSaida.get(i.nome) || 0) + i.qtd); });
 
             listaSaidaTemporaria.forEach((item, index) => {
                 let totalLiberado = 0;
@@ -1065,11 +1266,11 @@
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                        <td class="py-3 font-medium text-lg leading-tight">
+                        <td class="py-3 px-2 font-medium text-lg leading-tight">
                             ${item.nome}<br>${faltaHTML}
                         </td>
-                        <td class="py-3 text-right font-bold text-lg">${window.fmtQtd(item.qtd)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
-                        <td class="py-3 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="ph ph-trash text-lg"></i></button></td>
+                        <td class="py-3 px-2 text-right font-bold text-lg">${window.fmtQtd(item.qtd)} <span class="font-normal text-sm text-gray-500">${item.und}</span></td>
+                        <td class="py-3 px-2 text-center"><button type="button" onclick="window.removerItemSaida(${index})" class="text-red-500 hover:text-red-700 p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"><i class="ph ph-trash text-xl"></i></button></td>
                     </tr>`;
             });
         }
@@ -1078,7 +1279,7 @@
             if(listaSaidaTemporaria.length === 0) return;
             const btn = document.getElementById('btn-salvar-saidas');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Confirmando...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-2xl"></i> Processando...';
             btn.disabled = true;
 
             try {
@@ -1105,20 +1306,12 @@
                     let qtdAtendida = req.qtd - qtdRestante;
 
                     batch.set(doc(collection(db, 'movimentos')), { 
-                        tipo: 'SAIDA', 
-                        nome: req.nome, 
-                        qtd: req.qtd, // O que foi solicitado na nota
-                        qtdAtendida: qtdAtendida, // O que de fato saiu do estoque
-                        und: req.und, 
-                        data: timestamp, 
-                        detalhes_pvps: logBaixas, 
-                        nota: nota,
-                        usuario: usuarioAtual.email 
+                        tipo: 'SAIDA', nome: req.nome, qtd: req.qtd, qtdAtendida: qtdAtendida, und: req.und, data: timestamp, detalhes_pvps: logBaixas, nota: nota, usuario: usuarioAtual.email 
                     });
                 }
                 
                 await batch.commit(); 
-                window.showToast('Baixas registradas e salvas com sucesso!', 'success');
+                window.showToast('Baixas registradas com sucesso!', 'success');
                 listaSaidaTemporaria = []; renderListaSaida(); revalidarSaldoSaida();
                 document.getElementById('sai-preview-box').innerHTML = '';
             } catch (error) { 
@@ -1129,153 +1322,6 @@
             }
         });
 
-        // --- IMPORTAÇÃO DE PDF E PRINTS DE SAÍDA (TESSERACT / PDFJS) ---
-        window.lerPDFSaida = async function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const btn = document.getElementById('btn-importar-pdf');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Processando Arquivo...';
-            btn.disabled = true;
-
-            try {
-                let fullText = '';
-                
-                if (file.type.startsWith('image/')) {
-                    btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-lg"></i> Lendo Imagem (OCR)...';
-                    try {
-                        const worker = await window.Tesseract.createWorker('por');
-                        const ret = await worker.recognize(file);
-                        fullText = ret.data.text;
-                        await worker.terminate();
-                    } catch (ocrErr) {
-                        console.error('Erro no OCR:', ocrErr);
-                        throw new Error('Falha na leitura da imagem. Verifique sua conexão ou tente usar um PDF.');
-                    }
-                } else if (file.type === 'application/pdf') {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        
-                        const items = textContent.items;
-                        items.sort((a, b) => {
-                            if (Math.abs(b.transform[5] - a.transform[5]) > 5) return b.transform[5] - a.transform[5];
-                            return a.transform[4] - b.transform[4];
-                        });
-                        
-                        let lastY = null;
-                        items.forEach(item => {
-                            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
-                                fullText += '\n'; // Preserva a quebra de linha do PDF
-                            }
-                            fullText += item.str + ' ';
-                            lastY = item.transform[5];
-                        });
-                        fullText += '\n';
-                    }
-                } else {
-                    throw new Error("Formato não suportado");
-                }
-
-                // Normaliza o texto: remove acentos e transforma para uppercase
-                let normFullText = fullText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                
-                console.log("Texto Bruto Extraído:\n", normFullText); // Útil para depuração
-
-                // Lógica de Extração Estrita por Linha
-                let importados = 0;
-                let criadosZeros = 0;
-                const batch = writeBatch(db);
-                let requiresBatchCommit = false;
-                const itensCadastrados = new Set(estoque.map(l => l.nome));
-
-                // Regex Estrita:
-                // 1. (Opcional) Captura o código numérico no início da linha (\b\d+\s+)
-                // 2. Captura o Nome do Produto, que deve conter letras, espaços ou hífens ([A-Z][A-Z0-9\s\-]+?)
-                // 3. Garante que o nome seja seguido pelo Peso numérico ([\d.,]+)
-                // 4. Captura a Unidade de Medida (KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)
-                // 5. (Opcional) Captura a coluna final de receitas (\s+\d+)?
-                const regexLinha = /\b(?:\d+\s+)?([A-Z][A-Z0-9\s\-]+?)\s+([\d.,]+)\s*(KG|UND|CX|UN|KGS|L|ML|PCT|PCTS)(?:\s+\d+)?\b/gi;
-                
-                let matches = [...normFullText.matchAll(regexLinha)];
-
-                for (const match of matches) {
-                    // Limpa o nome capturado de espaços extras e palavras de cabeçalho grudadas por falha de linha do OCR
-                    let nomeOriginal = match[1].trim().replace(/\s+/g, ' '); 
-                    
-                    // Filtro de Segurança Final: Se o nome "filtrado" ainda for lixo de cabeçalho, pula.
-                    const blacklist = ['CODIGO', 'PRODUTO', 'PESO', 'RECEITAS', 'RECEITA', 'LISTA DE PRODUCAO', 'HORAS', 'PAES DE QUEIJO', 'SALGADOS', 'CONFEITARIA', 'PAES', 'TOTAL', 'SUBTOTAL'];
-                    let isBlacklisted = false;
-                    for (const badWord of blacklist) {
-                        if (nomeOriginal.includes(badWord)) {
-                            isBlacklisted = true;
-                            break;
-                        }
-                    }
-                    if (isBlacklisted || nomeOriginal.length < 3) continue;
-
-                    let qtdStr = match[2].replace(',', '.'); 
-                    let und = match[3].toLowerCase();
-                    if (und === 'un' || und === 'kgs') und = (und === 'un') ? 'und' : 'kg';
-                    
-                    let qtd = parseFloat(qtdStr);
-
-                    if (!isNaN(qtd) && qtd > 0) {
-                        if (!itensCadastrados.has(nomeOriginal)) {
-                            // Cadastrar novo item vazio (saldo zero)
-                            const novoLoteRef = doc(collection(db, 'estoque'));
-                            batch.set(novoLoteRef, {
-                                nome: nomeOriginal,
-                                setor: 'N/A',
-                                lote: '-',
-                                qtd: 0,
-                                und: und, 
-                                validade: '',
-                                isTeste: false
-                            });
-                            requiresBatchCommit = true;
-                            itensCadastrados.add(nomeOriginal);
-                            estoque.push({ id: novoLoteRef.id, nome: nomeOriginal, qtd: 0, und: und });
-                            criadosZeros++;
-                        }
-
-                        const existingIndex = listaSaidaTemporaria.findIndex(i => i.nome === nomeOriginal);
-                        if (existingIndex >= 0) {
-                            listaSaidaTemporaria[existingIndex].qtd += qtd;
-                        } else {
-                            listaSaidaTemporaria.push({ nome: nomeOriginal, qtd, und: und });
-                        }
-                        importados++;
-                    }
-                }
-
-                if (requiresBatchCommit) await batch.commit();
-
-                if (importados > 0) {
-                    renderListaSaida();
-                    revalidarSaldoSaida();
-                    let msg = `${importados} item(ns) importado(s) do arquivo com sucesso.`;
-                    if (criadosZeros > 0) msg += ` (${criadosZeros} novo(s) item(ns) incluído(s) no sistema com saldo zero).`;
-                    window.showToast(msg, 'success');
-                } else {
-                    window.showToast('Nenhum item válido identificado no arquivo. Certifique-se de ser o padrão de relatório.', 'error');
-                }
-
-            } catch (error) {
-                console.error(error);
-                window.showToast('Falha: ' + error.message, 'error');
-            } finally {
-                btn.innerHTML = '<i class="ph ph-scan mr-2 text-lg"></i> Importar Relatório (PDF ou Print)';
-                btn.disabled = false;
-                event.target.value = ''; 
-            }
-        }
-
-        // --- TABELA DE ESTOQUE E FILTROS ---
         document.getElementById('search-estoque').addEventListener('input', renderTabelaEstoque);
         document.getElementById('sort-estoque').addEventListener('change', renderTabelaEstoque);
 
@@ -1286,7 +1332,6 @@
             const termoBusca = document.getElementById('search-estoque').value.trim().toUpperCase();
             const ordem = document.getElementById('sort-estoque').value;
             
-            // Agrupar itens MESMO ZERADOS
             let agrupado = {};
             estoque.forEach(l => {
                 if(!agrupado[l.nome]) agrupado[l.nome] = { total: 0, und: l.und, lotes: [], vencMaisProximo: null };
@@ -1320,38 +1365,39 @@
             });
 
             if (itensLista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan=\"4\" class=\"p-8 text-center text-gray-500\">Nenhum item cadastrado ou encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan=\"4\" class=\"p-8 text-center text-gray-500\">Nenhum item encontrado.</td></tr>`;
                 return;
             }
 
             itensLista.forEach(item => {
                 let badges = '';
                 if (item.total <= 0) {
-                    badges = '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-gray-100 text-gray-500 uppercase border border-gray-200\"><i class=\"ph ph-empty mr-1\"></i> Zerado / Esgotado</span>';
+                    badges = '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-gray-100 text-gray-500 uppercase border border-gray-200\"><i class=\"ph ph-empty mr-1\"></i> Esgotado</span>';
                 } else {
                     let temTeste = item.lotes.some(l => l.isTeste);
                     let temBloqueado = item.lotes.some(l => !l.isTeste && analisarValidade(l.validade, false).diasRestantes <= 30);
                     badges += temTeste ? '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-purple-100 text-purple-800 uppercase border border-purple-200\"><i class=\"ph ph-flask mr-1\"></i> Testes</span> ' : '';
-                    badges += temBloqueado ? '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 uppercase border border-red-200\"><i class=\"ph ph-prohibit mr-1\"></i> Bloqueados</span> ' : '';
+                    badges += temBloqueado ? '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 uppercase border border-red-200\"><i class=\"ph ph-prohibit mr-1\"></i> Bloq.</span> ' : '';
                     if(!temTeste && !temBloqueado) badges = '<span class=\"px-2 py-1 text-[10px] font-bold rounded bg-green-50 text-green-600 uppercase border border-green-100\">Livre</span>';
                 }
                 
                 tbody.innerHTML += `
                     <tr class="hover:bg-brand-50 transition-colors border-b border-gray-100 group ${item.total <= 0 ? 'opacity-70' : ''}">
-                        <td class="p-4 font-bold text-gray-800 text-lg">${item.nome}</td>
-                        <td class="p-4">
-                            <div class="flex flex-wrap gap-2">${badges}</div>
-                        </td>
-                        <td class="p-4 text-right font-bold text-gray-800 text-xl">
-                            ${window.fmtQtd(item.total)} <span class="text-sm text-gray-500 font-normal">${item.und}</span>
+                        <td class="p-4 font-bold text-gray-800 text-base md:text-lg">${item.nome}</td>
+                        <td class="p-4"><div class="flex flex-wrap gap-2">${badges}</div></td>
+                        <td class="p-4 text-right font-bold text-gray-800 text-lg md:text-xl">
+                            ${window.fmtQtd(item.total)} <span class="text-xs md:text-sm text-gray-500 font-normal">${item.und}</span>
                         </td>
                         <td class="p-4 text-center">
-                            <div class="flex justify-center space-x-2">
-                                <button onclick="window.abrirModalItem('${item.nome}')" title="Ver Lotes" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-200 font-medium text-sm transition-colors shadow-sm whitespace-nowrap flex items-center">
-                                    <i class="ph ph-list-magnifying-glass mr-1 text-lg"></i> Lotes
+                            <div class="flex justify-center items-center space-x-2">
+                                <button onclick="window.abrirModalItem('${item.nome}')" title="Ver Lotes" class="text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 p-3 rounded-xl border border-brand-200 transition-colors shadow-sm">
+                                    <i class="ph ph-list-magnifying-glass text-xl md:text-2xl"></i>
                                 </button>
-                                <button onclick="window.excluirItemTodo('${item.nome}')" title="Excluir Produto Completo do Estoque" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition-colors shadow-sm whitespace-nowrap font-medium flex items-center">
-                                    <i class="ph ph-trash text-lg mr-1"></i> Excluir
+                                <button onclick="window.abrirModalEditItem('${item.nome}')" title="Editar Produto Inteiro" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-3 rounded-xl border border-blue-200 transition-colors shadow-sm">
+                                    <i class="ph ph-pencil-simple text-xl md:text-2xl"></i>
+                                </button>
+                                <button onclick="window.excluirItemTodo('${item.nome}')" title="Excluir Produto Completo" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-3 rounded-xl border border-red-200 transition-colors shadow-sm">
+                                    <i class="ph ph-trash text-xl md:text-2xl"></i>
                                 </button>
                             </div>
                         </td>
@@ -1360,31 +1406,64 @@
             });
         }
 
-        // --- SISTEMA DE EXCLUSÃO DE ITEM COMPLETO ---
+        window.abrirModalEditItem = function(nome) {
+            document.getElementById('edit-item-geral-oldnome').value = nome;
+            document.getElementById('edit-item-geral-newnome').value = nome;
+            const itemExample = estoque.find(l => l.nome === nome);
+            document.getElementById('edit-item-geral-und').value = itemExample ? itemExample.und : 'und';
+            document.getElementById('modal-edit-item').classList.remove('hidden');
+        }
+
+        window.fecharModalEditItem = function() {
+            document.getElementById('modal-edit-item').classList.add('hidden');
+        }
+
+        document.getElementById('form-edit-item-geral').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const oldNome = document.getElementById('edit-item-geral-oldnome').value;
+            const newNome = document.getElementById('edit-item-geral-newnome').value.trim().toUpperCase();
+            const newUnd = document.getElementById('edit-item-geral-und').value;
+            
+            const btn = document.getElementById('btn-save-item-geral');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                const batch = writeBatch(db);
+                const lotes = estoque.filter(l => l.nome === oldNome);
+                lotes.forEach(l => {
+                    batch.update(doc(db, 'estoque', l.id), { nome: newNome, und: newUnd });
+                });
+                await batch.commit();
+                await registrarEdicao(newNome, 'EDIÇÃO', `Produto renomeado/editado [${oldNome}] -> [${newNome}] (${newUnd}) globalmente.`);
+                window.fecharModalEditItem();
+                window.showToast('Produto atualizado com sucesso!', 'success');
+            } catch (error) {
+                window.showToast('Erro ao atualizar produto: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        });
+
         window.excluirItemTodo = async function(nomeItem) {
-            if(!confirm(`⚠️ CUIDADO: Você está prestes a excluir COMPLETAMENTE o item "${nomeItem}" e TODOS os seus lotes do sistema. Esta ação não pode ser desfeita. Confirmar exclusão permanente?`)) return;
+            if(!confirm(`⚠️ CUIDADO: Você está prestes a excluir COMPLETAMENTE o item "${nomeItem}" e TODOS os seus lotes. Confirmar exclusão permanente?`)) return;
             try {
                 const lotesDoItem = estoque.filter(l => l.nome === nomeItem);
                 const batch = writeBatch(db);
-                lotesDoItem.forEach(l => {
-                    batch.delete(doc(db, 'estoque', l.id));
-                });
+                lotesDoItem.forEach(l => { batch.delete(doc(db, 'estoque', l.id)); });
                 await batch.commit();
-                await registrarEdicao(nomeItem, 'EXCLUSÃO', `Removeu o item completo do catálogo de estoque (todos os lotes).`);
-                window.showToast(`Item "${nomeItem}" e seus lotes foram excluídos permanentemente.`, 'success');
-            } catch (error) {
-                window.showToast('Erro ao excluir item: ' + error.message, 'error');
-            }
+                await registrarEdicao(nomeItem, 'EXCLUSÃO', `Removeu o item completo do catálogo (todos os lotes).`);
+                window.showToast(`Produto excluído permanentemente.`, 'success');
+            } catch (error) { window.showToast('Erro ao excluir item: ' + error.message, 'error'); }
         }
 
-        // --- MODAL DETALHES DO ITEM (VER LOTES) ---
         window.abrirModalItem = function(nome) {
             itemAtualModal = nome;
             const stats = getMediaSaida30d(nome);
-            
             document.getElementById('modal-item-nome').innerText = nome;
             document.getElementById('modal-item-media').innerText = `${stats.media} ${stats.und}/dia`;
-            
             renderModalLotes();
             document.getElementById('modal-item').classList.remove('hidden');
         }
@@ -1398,13 +1477,11 @@
             if (!itemAtualModal) return;
             const tbody = document.getElementById('modal-lotes-tbody');
             tbody.innerHTML = '';
-
             let lotesItem = estoque.filter(l => l.nome === itemAtualModal); 
-            // Agora lotesItem MOSTRA OS ZERADOS no modal para você poder excluir lotes zerados criados pelo PDF
             lotesItem.sort((a, b) => new Date(a.validade) - new Date(b.validade));
 
             if (lotesItem.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhum lote registrado para este item.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhum lote registrado.</td></tr>`;
                 return;
             }
 
@@ -1419,28 +1496,27 @@
                 const dataEnt = l.dataEntrada ? new Date(l.dataEntrada + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
                 const dataVal = l.validade ? new Date(l.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '--';
                 
-                let btnLiberar = analise.status === 'TESTE' ? 
-                    `<button onclick="window.liberarTeste('${l.id}')" title="Liberar CQ" class="text-purple-600 hover:text-purple-800 p-1"><i class="ph ph-check-circle text-lg"></i></button>` : '';
+                let btnLiberar = analise.status === 'TESTE' ? `<button onclick="window.liberarTeste('${l.id}')" title="Liberar CQ" class="text-purple-600 hover:text-purple-800 p-2 bg-purple-50 rounded-lg"><i class="ph ph-check-circle text-xl"></i></button>` : '';
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors ${l.qtd <= 0 ? 'opacity-60 bg-gray-50' : ''}">
-                        <td class="py-3 px-4 font-bold text-gray-800">${l.lote}</td>
-                        <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
-                        <td class="py-3 px-4 text-gray-600">${dataEnt}</td>
-                        <td class="py-3 px-4 text-gray-600">
+                    <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 ${l.qtd <= 0 ? 'opacity-60 bg-gray-50' : ''}">
+                        <td class="py-4 px-4 font-bold text-gray-800">${l.lote}</td>
+                        <td class="py-4 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
+                        <td class="py-4 px-4 text-gray-600">${dataEnt}</td>
+                        <td class="py-4 px-4 text-gray-600">
                             ${dataVal} <span class="text-[10px] ml-1 ${analise.diasRestantes <= 35 && !l.isTeste ? 'text-red-500 font-bold' : 'text-gray-400'}">${analise.diasRestantes !== 999 ? '('+analise.diasRestantes+'d)' : ''}</span>
                         </td>
-                        <td class="py-3 px-4">
+                        <td class="py-4 px-4">
                             <span class="px-2 py-1 text-[10px] font-bold rounded-md border flex items-center w-max ${badgeClass}">
                                 <i class="ph ${icon} mr-1"></i> ${analise.status}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-right font-bold">${window.fmtQtd(l.qtd)}</td>
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-4 px-4 text-right font-bold text-lg">${window.fmtQtd(l.qtd)}</td>
+                        <td class="py-4 px-4 text-center">
                             <div class="flex justify-center items-center space-x-2">
                                 ${btnLiberar}
-                                <button onclick="window.abrirModalEdicao('${l.id}')" title="Editar Lote" class="text-blue-500 hover:text-blue-700 p-1"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                <button onclick="window.excluirLote('${l.id}')" title="Excluir Lote" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash text-lg"></i></button>
+                                <button onclick="window.abrirModalEdicao('${l.id}')" title="Editar Lote" class="text-blue-500 hover:text-blue-700 p-2 bg-blue-50 rounded-lg"><i class="ph ph-pencil-simple text-xl"></i></button>
+                                <button onclick="window.excluirLote('${l.id}')" title="Excluir Lote" class="text-red-500 hover:text-red-700 p-2 bg-red-50 rounded-lg"><i class="ph ph-trash text-xl"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1448,27 +1524,24 @@
             });
         }
 
-        // --- SISTEMA DE EDIÇÃO E EXCLUSÃO DE LOTES ---
         window.liberarTeste = async function(loteId) {
-            if(!confirm("Tem certeza que deseja liberar este lote do status de Teste para Expedição?")) return;
+            if(!confirm("Liberar este lote do status de Teste para Expedição?")) return;
             try {
                 const lote = estoque.find(l => l.id === loteId);
                 await updateDoc(doc(db, 'estoque', loteId), { isTeste: false });
                 registrarEdicao(lote.nome, 'LIBERAÇÃO CQ', `Lote ${lote.lote} liberado pelo CQ.`);
-                window.showToast("Lote liberado para expedição!", "success");
-            } catch(error) { window.showToast('Erro ao liberar lote: ' + error.message, 'error'); }
+                window.showToast("Lote liberado!", "success");
+            } catch(error) { window.showToast('Erro: ' + error.message, 'error'); }
         }
 
         window.abrirModalEdicao = function(loteId) {
             const lote = estoque.find(l => l.id === loteId);
             if (!lote) return;
-
             document.getElementById('edit-lote-id').value = lote.id;
-            document.getElementById('edit-item-nome').value = lote.nome;
+            document.getElementById('edit-lote-nome-produto').value = lote.nome;
             document.getElementById('edit-lote-num').value = lote.lote;
             document.getElementById('edit-lote-qtd').value = Number(lote.qtd);
             document.getElementById('edit-lote-val').value = lote.validade;
-
             document.getElementById('modal-edit-lote').classList.remove('hidden');
         }
 
@@ -1479,7 +1552,7 @@
         document.getElementById('form-edicao-lote').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('edit-lote-id').value;
-            const nome = document.getElementById('edit-item-nome').value;
+            const nome = document.getElementById('edit-lote-nome-produto').value;
             const novoLote = document.getElementById('edit-lote-num').value.trim();
             const novaQtd = parseFloat(document.getElementById('edit-lote-qtd').value);
             const novaVal = document.getElementById('edit-lote-val').value;
@@ -1487,23 +1560,20 @@
             try {
                 const oldLoteData = estoque.find(l => l.id === id);
                 await updateDoc(doc(db, 'estoque', id), { lote: novoLote, qtd: novaQtd, validade: novaVal });
-
-                const detalhe = `Alterou Lote [${oldLoteData.lote} -> ${novoLote}], Qtd [${oldLoteData.qtd} -> ${novaQtd}], Val [${oldLoteData.validade} -> ${novaVal}]`;
+                const detalhe = `Lote alterado [${oldLoteData.lote} -> ${novoLote}], Qtd [${oldLoteData.qtd} -> ${novaQtd}], Val [${oldLoteData.validade} -> ${novaVal}]`;
                 await registrarEdicao(nome, 'EDIÇÃO', detalhe);
-
                 window.fecharModalEdicao();
-                window.showToast('Lote atualizado com sucesso!', 'success');
+                window.showToast('Lote salvo!', 'success');
             } catch (error) { window.showToast('Erro ao atualizar: ' + error.message, 'error'); }
         });
 
         window.excluirLote = async function(loteId) {
-            if(!confirm("CUIDADO: Tem certeza que deseja APAGAR este lote do sistema? Essa ação ficará registrada no log.")) return;
+            if(!confirm("CUIDADO: Apagar este lote único?")) return;
             try {
                 const lote = estoque.find(l => l.id === loteId);
                 await deleteDoc(doc(db, 'estoque', loteId));
-                
                 await registrarEdicao(lote.nome, 'EXCLUSÃO', `Removeu o Lote: ${lote.lote} (Qtd: ${lote.qtd} ${lote.und})`);
-                window.showToast('Lote removido do estoque.', 'success');
+                window.showToast('Lote removido.', 'success');
             } catch (error) { window.showToast('Erro ao remover: ' + error.message, 'error'); }
         }
 
@@ -1511,26 +1581,23 @@
             await addDoc(collection(db, 'edicoes'), { data: new Date().toISOString(), nome: nomeItem, acao: acao, detalhes: detalhes, usuario: usuarioAtual.email });
         }
 
-        // --- MODAL HISTÓRICO ---
         window.abrirModalEdicoes = function() {
             if (!itemAtualModal) return;
             document.getElementById('hist-item-nome').innerText = itemAtualModal;
             const ul = document.getElementById('lista-historico');
             ul.innerHTML = '';
-
             const histItem = edicoes.filter(e => e.nome === itemAtualModal);
-
             if (histItem.length === 0) {
-                ul.innerHTML = '<li class="text-gray-500 text-center py-4">Nenhuma alteração registrada para este item.</li>';
+                ul.innerHTML = '<li class="text-gray-500 text-center py-4">Nenhuma alteração registrada.</li>';
             } else {
                 histItem.forEach(log => {
                     const dataFormatada = new Date(log.data).toLocaleString('pt-BR');
-                    const corAcao = log.acao === 'EXCLUSÃO' ? 'text-red-600 bg-red-50' : (log.acao === 'EDIÇÃO' ? 'text-blue-600 bg-blue-50' : (log.acao === 'INVENTÁRIO' ? 'text-orange-600 bg-orange-50' : 'text-purple-600 bg-purple-50'));
+                    const corAcao = log.acao === 'EXCLUSÃO' ? 'text-red-600 bg-red-50 border-red-200' : (log.acao === 'EDIÇÃO' ? 'text-blue-600 bg-blue-50 border-blue-200' : (log.acao === 'INVENTÁRIO' ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-purple-600 bg-purple-50 border-purple-200'));
                     
                     ul.innerHTML += `
                         <li class="border-b border-gray-100 pb-3 last:border-0">
                             <div class="flex justify-between items-start mb-1">
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${corAcao}">${log.acao}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${corAcao}">${log.acao}</span>
                                 <span class="text-xs text-gray-400">${dataFormatada}</span>
                             </div>
                             <p class="text-gray-700 font-medium mb-1">${log.detalhes}</p>
@@ -1539,7 +1606,6 @@
                     `;
                 });
             }
-
             document.getElementById('modal-historico').classList.remove('hidden');
         }
 
@@ -1547,7 +1613,6 @@
             document.getElementById('modal-historico').classList.add('hidden');
         }
 
-        // --- INVENTÁRIO CÍCLICO ---
         window.renderInventarioLista = function() {
             if (!document.getElementById('view-inventario').classList.contains('block')) return;
 
@@ -1557,12 +1622,9 @@
 
             const mapItens = new Map();
             estoque.forEach(l => {
-                if (!mapItens.has(l.nome)) {
-                    mapItens.set(l.nome, { nome: l.nome, setor: l.setor || 'N/A' });
-                }
+                if (!mapItens.has(l.nome)) mapItens.set(l.nome, { nome: l.nome, setor: l.setor || 'N/A' });
             });
             let itens = Array.from(mapItens.values());
-
             itens.sort((a,b) => a.nome.localeCompare(b.nome));
 
             if (setorFiltro) itens = itens.filter(i => i.setor === setorFiltro);
@@ -1577,10 +1639,10 @@
             itens.forEach(i => {
                 const isChecked = selectedInvItems.has(i.nome) ? 'checked' : '';
                 container.innerHTML += `
-                    <label class="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer transition-colors border border-transparent hover:border-gray-200">
-                        <input type="checkbox" value="${i.nome}" class="inv-checkbox w-4 h-4 text-brand-600 rounded focus:ring-brand-500" ${isChecked} onchange="window.toggleInvItem(this)">
+                    <label class="flex items-center space-x-4 p-4 hover:bg-white rounded-xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 bg-white shadow-sm mb-2 md:mb-0">
+                        <input type="checkbox" value="${i.nome}" class="inv-checkbox w-6 h-6 text-brand-600 rounded focus:ring-brand-500 border-gray-300" ${isChecked} onchange="window.toggleInvItem(this)">
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-gray-800">${i.nome}</span>
+                            <span class="text-base font-bold text-gray-800">${i.nome}</span>
                             <span class="text-[10px] font-medium text-gray-500 uppercase">${i.setor}</span>
                         </div>
                     </label>
@@ -1594,15 +1656,11 @@
         }
 
         window.selectAllInv = function() {
-            document.querySelectorAll('.inv-checkbox').forEach(cb => {
-                cb.checked = true;
-                selectedInvItems.add(cb.value);
-            });
+            document.querySelectorAll('.inv-checkbox').forEach(cb => { cb.checked = true; selectedInvItems.add(cb.value); });
         }
 
         window.clearAllInv = function() {
-            selectedInvItems.clear();
-            window.renderInventarioLista();
+            selectedInvItems.clear(); window.renderInventarioLista();
         }
 
         document.getElementById('inv-setor-filtro')?.addEventListener('change', window.renderInventarioLista);
@@ -1613,15 +1671,10 @@
             const tbody = document.getElementById('inv-print-tbody');
             const meta = document.getElementById('inv-print-meta');
             
-            if (selectedInvItems.size === 0) {
-                window.showToast('Selecione pelo menos um item para gerar a ficha.', 'error');
-                return;
-            }
+            if (selectedInvItems.size === 0) return window.showToast('Selecione itens para gerar a ficha.', 'error');
 
             tbody.innerHTML = '';
-            
             let itemsParaContar = estoque.filter(l => selectedInvItems.has(l.nome)); 
-            
             itemsParaContar.sort((a, b) => {
                 let sA = a.setor || 'N/A'; let sB = b.setor || 'N/A';
                 if (sA !== sB) return sA.localeCompare(sB);
@@ -1643,28 +1696,21 @@
                 `;
             });
             
-            meta.innerText = `Itens Selecionados: ${selectedInvItems.size} | Data de Impressão: ${new Date().toLocaleDateString('pt-BR')}`;
-            
+            meta.innerText = `Itens Selecionados: ${selectedInvItems.size} | Data: ${new Date().toLocaleDateString('pt-BR')}`;
             document.getElementById('inv-selection-area').classList.remove('hidden');
             document.getElementById('inv-lancamento-area').classList.add('hidden');
             printArea.classList.remove('hidden');
             printArea.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // --- LANÇAMENTO DIGITAL DE INVENTÁRIO ---
         window.abrirLancamentoInventario = function() {
-            if (selectedInvItems.size === 0) {
-                window.showToast('Selecione os itens nas caixas de seleção primeiro.', 'error');
-                return;
-            }
-
+            if (selectedInvItems.size === 0) return window.showToast('Selecione os itens nas caixas.', 'error');
             document.getElementById('inv-selection-area').classList.add('hidden');
             document.getElementById('print-area').classList.add('hidden');
             document.getElementById('inv-lancamento-area').classList.remove('hidden');
 
             const tbody = document.getElementById('inv-lancamento-tbody');
             tbody.innerHTML = '';
-            
             currentInvData = [];
             
             let itemsParaContar = estoque.filter(l => selectedInvItems.has(l.nome)); 
@@ -1678,17 +1724,17 @@
             itemsParaContar.forEach(l => {
                 currentInvData.push(l);
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
-                        <td class="py-3 px-4 font-bold text-gray-800">${l.nome}</td>
-                        <td class="py-3 px-4 text-gray-600">${l.lote || '-'}</td>
-                        <td class="py-3 px-4 text-right text-gray-500">${window.fmtQtd(l.qtd)} <span class="text-xs">${l.und}</span></td>
-                        <td class="py-3 px-4 text-center">
+                    <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                        <td class="py-4 px-4 text-xs text-gray-500 uppercase">${l.setor || '-'}</td>
+                        <td class="py-4 px-4 font-bold text-gray-800 text-base">${l.nome}</td>
+                        <td class="py-4 px-4 text-gray-600">${l.lote || '-'}</td>
+                        <td class="py-4 px-4 text-right text-gray-500 text-lg">${window.fmtQtd(l.qtd)} <span class="text-xs">${l.und}</span></td>
+                        <td class="py-4 px-4 text-center">
                             <input type="number" step="0.001" id="fisica-${l.id}" 
-                                class="w-24 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" 
+                                class="w-full max-w-[120px] bg-white border border-gray-300 rounded-lg px-3 py-3 text-center font-bold text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500 text-lg" 
                                 placeholder="0.000" oninput="window.calcDivergencia('${l.id}', ${l.qtd})">
                         </td>
-                        <td class="py-3 px-4 text-right font-bold" id="div-${l.id}">--</td>
+                        <td class="py-4 px-4 text-right font-bold text-lg" id="div-${l.id}">--</td>
                     </tr>
                 `;
             });
@@ -1702,72 +1748,48 @@
         window.calcDivergencia = function(id, sistemaQtd) {
             const inputVal = document.getElementById(`fisica-${id}`).value;
             const divSpan = document.getElementById(`div-${id}`);
-            
             if (inputVal === '') {
-                divSpan.innerText = '--';
-                divSpan.className = 'py-3 px-4 text-right font-bold text-gray-400';
-                return;
+                divSpan.innerText = '--'; divSpan.className = 'py-4 px-4 text-right font-bold text-gray-400 text-lg'; return;
             }
-
             const dif = parseFloat(inputVal) - parseFloat(sistemaQtd);
-            
             if (dif === 0) {
-                divSpan.innerText = 'OK (0.00)';
-                divSpan.className = 'py-3 px-4 text-right font-bold text-green-500';
+                divSpan.innerText = 'OK (0.00)'; divSpan.className = 'py-4 px-4 text-right font-bold text-green-500 text-lg';
             } else if (dif > 0) {
-                divSpan.innerText = `+${window.fmtQtd(dif)}`;
-                divSpan.className = 'py-3 px-4 text-right font-bold text-blue-500';
+                divSpan.innerText = `+${window.fmtQtd(dif)}`; divSpan.className = 'py-4 px-4 text-right font-bold text-blue-500 text-lg';
             } else {
-                divSpan.innerText = `${window.fmtQtd(dif)}`;
-                divSpan.className = 'py-3 px-4 text-right font-bold text-red-500';
+                divSpan.innerText = `${window.fmtQtd(dif)}`; divSpan.className = 'py-4 px-4 text-right font-bold text-red-500 text-lg';
             }
         }
 
         window.salvarAjustesInventario = async function() {
             const btn = document.getElementById('btn-aplicar-ajustes');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-xl"></i> Processando Ajustes...';
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2 text-2xl"></i> Processando Ajustes...';
             btn.disabled = true;
 
             try {
                 const batch = writeBatch(db);
                 let ajustesRealizados = 0;
-
                 for (const l of currentInvData) {
                     const inputVal = document.getElementById(`fisica-${l.id}`).value;
-                    if (inputVal === '') continue; // Ignora se não foi digitado nada
-                    
+                    if (inputVal === '') continue; 
                     const qtdFisica = parseFloat(inputVal);
                     if (qtdFisica !== Number(l.qtd)) {
                         ajustesRealizados++;
                         const dif = qtdFisica - Number(l.qtd);
-                        
                         batch.update(doc(db, 'estoque', l.id), { qtd: qtdFisica });
-                        
-                        await registrarEdicao(l.nome, 'INVENTÁRIO', `Ajuste de Inventário Lote [${l.lote}]. Sis: ${window.fmtQtd(l.qtd)} -> Físico: ${window.fmtQtd(qtdFisica)} (Divergência: ${dif > 0 ? '+'+window.fmtQtd(dif) : window.fmtQtd(dif)})`);
-                        
-                        batch.set(doc(collection(db, 'movimentos')), { 
-                            tipo: 'AJUSTE', nome: l.nome, lote: l.lote, qtd: dif, und: l.und, data: new Date().toISOString(), usuario: usuarioAtual.email, nota: 'Ajuste de Inventário Cíclico' 
-                        });
+                        await registrarEdicao(l.nome, 'INVENTÁRIO', `Ajuste Lote [${l.lote}]. Sis: ${window.fmtQtd(l.qtd)} -> Físico: ${window.fmtQtd(qtdFisica)} (Divergência: ${dif > 0 ? '+'+window.fmtQtd(dif) : window.fmtQtd(dif)})`);
+                        batch.set(doc(collection(db, 'movimentos')), { tipo: 'AJUSTE', nome: l.nome, lote: l.lote, qtd: dif, und: l.und, data: new Date().toISOString(), usuario: usuarioAtual.email, nota: 'Ajuste Cíclico' });
                     }
                 }
-
                 if (ajustesRealizados === 0) {
-                    window.showToast('Nenhuma divergência encontrada ou campos em branco.', 'success');
-                    window.fecharLancamentoInventario();
-                    return;
+                    window.showToast('Nenhuma divergência.', 'success'); window.fecharLancamentoInventario(); return;
                 }
-
                 await batch.commit();
-                window.showToast(`${ajustesRealizados} ajustes de inventário aplicados com sucesso!`, 'success');
+                window.showToast(`${ajustesRealizados} ajustes de inventário aplicados!`, 'success');
                 window.fecharLancamentoInventario();
-                
-            } catch (error) {
-                window.showToast('Erro ao salvar ajustes: ' + error.message, 'error');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (error) { window.showToast('Erro ao salvar: ' + error.message, 'error'); } 
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
     </script>
