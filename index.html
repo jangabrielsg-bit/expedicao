@@ -32,56 +32,51 @@
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <i class="ph ph-spinner-gap animate-spin text-4xl text-brand-500 mb-4"></i>
         <p class="text-gray-500 font-medium">Conectando ao banco de dados...</p>
-    </div>
-
-    <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden w-full relative">
-        <aside id="sidebar" class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm z-30 shrink-0 relative transition duration-200">
-            <div class="h-16 flex items-center px-6 border-b border-gray-100">
-                <i class="ph-fill ph-snowflake text-brand-500 text-2xl mr-2"></i>
-                <h1 class="text-lg font-bold text-gray-900">Expedição Câmaras</h1>
-            </div>
-            <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
-                <button onclick="window.navigate('dashboard')" id="nav-dashboard" class="sidebar-active w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-squares-four text-lg mr-3"></i> Painel Inicial
-                </button>
-                <button onclick="window.navigate('entrada')" id="nav-entrada" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-box-arrow-down text-lg mr-3"></i> Entrada da Produção
-                </button>
-                <button onclick="window.navigate('saida')" id="nav-saida" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-box-arrow-up text-lg mr-3"></i> Saída (PVPS)
-                </button>
-                <button onclick="window.navigate('estoque')" id="nav-estoque" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-stack text-lg mr-3"></i> Estoque Atual
-                </button>
-                <button onclick="window.navigate('inventario')" id="nav-inventario" class="w-full flex items-center px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <i class="ph ph-clipboard-text text-lg mr-3"></i> Inventário Cíclico
-                </button>
-            </nav>
-            <div class="p-4 border-t border-gray-100">
-                <div class="flex items-center justify-between text-sm text-gray-500">
-                    <div class="flex items-center overflow-hidden">
-                        <i class="ph ph-user-circle text-2xl mr-2"></i>
-                        <div class="truncate">
-                            <p id="user-name" class="font-bold text-gray-800 truncate">Operador</p>
-                            <p class="text-xs">Expedição</p>
-                        </div>
-                    </div>
-                    <button id="btn-logout" class="text-gray-400 hover:text-red-500 ml-2" title="Trocar Operador">
-                        <i class="ph ph-sign-out text-lg"></i>
+    </div    <div id="app-container" class="hidden flex-1 flex flex-col h-screen w-full relative pb-16 bg-gray-50">
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+            <header class="h-16 bg-white flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
+                <div class="flex items-center">
+                    <button id="btn-voltar" onclick="window.navigate('dashboard')" class="hidden mr-4 text-gray-500 hover:text-brand-600 transition-colors">
+                        <i class="ph ph-arrow-left text-2xl"></i>
                     </button>
+                    <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
                 </div>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col h-screen overflow-hidden">
-            <header class="h-16 bg-white flex items-center px-8 shadow-sm z-10 shrink-0">
-                <h2 id="page-title" class="text-xl font-bold text-gray-800">Painel Inicial</h2>
+                <div class="flex items-center text-sm">
+                    <p id="user-name" class="font-bold text-gray-800 mr-2 truncate max-w-[100px]">Operador</p>
+                    <button id="btn-logout" class="text-gray-400 hover:text-red-500" title="Trocar Operador"><i class="ph ph-sign-out text-xl"></i></button>
+                </div>
             </header>
 
             <div class="flex-1 overflow-y-auto p-8" id="main-container">
                 <datalist id="estoque-itens-list"></datalist>
-
                 <div id="view-dashboard" class="space-y-6 block">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <button onclick="window.navigate('entrada')" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center hover:border-brand-400 hover:shadow-md transition-all group">
+                            <div class="w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="ph ph-box-arrow-down text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-gray-800">Entrada (Pesar)</span>
+                        </button>
+                        <button onclick="window.navigate('saida')" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center hover:border-brand-400 hover:shadow-md transition-all group">
+                            <div class="w-16 h-16 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="ph ph-box-arrow-up text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-gray-800">Saída (PVPS)</span>
+                        </button>
+                        <button onclick="window.navigate('estoque')" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center hover:border-brand-400 hover:shadow-md transition-all group">
+                            <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="ph ph-stack text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-gray-800">Estoque Atual</span>
+                        </button>
+                        <button onclick="window.location.href='index.html'" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center hover:border-gray-400 hover:shadow-md transition-all group">
+                            <div class="w-16 h-16 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="ph ph-factory text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-gray-800">Ir p/ Fábrica/PCP</span>
+                        </button>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
                             <div class="flex justify-between items-center mb-4">
@@ -111,9 +106,14 @@
 
                 <div id="view-estoque" class="hidden space-y-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
-                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="ph ph-stack text-brand-500 mr-2 text-xl"></i> Estoque Atual
-                        </h3>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                                <i class="ph ph-stack text-brand-500 mr-2 text-xl"></i> Estoque Atual
+                            </h3>
+                            <div class="w-1/2">
+                                <input type="text" id="pesquisa-estoque" placeholder="🔍 Buscar produto inteligente..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-brand-400" onkeyup="window.filtrarEstoque(this.value)">
+                            </div>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
                                 <thead>
@@ -211,6 +211,21 @@
 
                 </div>
         </main>
+        
+        <nav class="fixed bottom-0 left-0 w-full h-16 bg-white border-t border-gray-200 flex justify-around items-center z-40 text-xs font-medium text-gray-500 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-safe">
+            <button onclick="window.navigate('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center w-full h-full hover:text-brand-600 transition-colors">
+                <i class="ph ph-squares-four text-2xl mb-1"></i> Painel
+            </button>
+            <button onclick="window.navigate('entrada')" id="nav-entrada" class="flex flex-col items-center justify-center w-full h-full hover:text-brand-600 transition-colors">
+                <i class="ph ph-box-arrow-down text-2xl mb-1"></i> Entrada
+            </button>
+            <button onclick="window.navigate('saida')" id="nav-saida" class="flex flex-col items-center justify-center w-full h-full hover:text-brand-600 transition-colors">
+                <i class="ph ph-box-arrow-up text-2xl mb-1"></i> Saída
+            </button>
+            <button onclick="window.navigate('estoque')" id="nav-estoque" class="flex flex-col items-center justify-center w-full h-full hover:text-brand-600 transition-colors">
+                <i class="ph ph-stack text-2xl mb-1"></i> Estoque
+            </button>
+        </nav>
     </div>
 
     <div id="modal-detalhes-estoque" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
@@ -224,6 +239,7 @@
                     <thead>
                         <tr class="text-gray-500 border-b">
                             <th class="pb-2">Lote Físico</th>
+                            <th class="pb-2">Data Entrada</th>
                             <th class="pb-2 text-right">Peso/Qtd</th>
                             <th class="pb-2">Validade</th>
                         </tr>
@@ -268,7 +284,21 @@
             t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 4000);
         };
 
-        window.navigate = function(v) { document.getElementById('page-title').innerText = v.toUpperCase(); document.querySelectorAll('[id^=view-]').forEach(el=>el.classList.add('hidden')); document.getElementById('view-'+v)?.classList.remove('hidden'); }
+        window.navigate = function(v) { 
+            document.getElementById('page-title').innerText = v === 'dashboard' ? 'Painel Inicial' : v.toUpperCase(); 
+            document.querySelectorAll('[id^=view-]').forEach(el=>el.classList.add('hidden')); 
+            document.getElementById('view-'+v)?.classList.remove('hidden'); 
+            document.querySelectorAll('[id^=nav-]').forEach(el=>{
+                el.classList.remove('text-brand-600');
+            });
+            document.getElementById('nav-'+v)?.classList.add('text-brand-600');
+            
+            if (v === 'dashboard') {
+                document.getElementById('btn-voltar').classList.add('hidden');
+            } else {
+                document.getElementById('btn-voltar').classList.remove('hidden');
+            }
+        }
 
         document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('nomeOperador'); window.location.reload(); });
 
@@ -326,6 +356,15 @@
             });
         }
 
+        window.filtrarEstoque = function(termo) {
+            const linhas = document.querySelectorAll('#tbody-estoque tr');
+            const termoLower = termo.toLowerCase();
+            linhas.forEach(linha => {
+                const textoLinha = linha.innerText.toLowerCase();
+                linha.style.display = textoLinha.includes(termoLower) ? '' : 'none';
+            });
+        };
+
         window.abrirDetalhesEstoque = function(nomeProduto) {
             const lotesDoProduto = estoque.filter(i => i.nome === nomeProduto);
             document.getElementById('modal-detalhes-titulo').innerText = 'Lotes de: ' + nomeProduto;
@@ -333,8 +372,9 @@
             tbody.innerHTML = lotesDoProduto.map(l => `
                 <tr>
                     <td class="py-3 font-bold text-gray-800">${l.lote}</td>
+                    <td class="py-3 text-gray-500">${l.dataEntrada ? new Date(l.dataEntrada).toLocaleDateString('pt-BR') : '-'}</td>
                     <td class="py-3 font-bold text-brand-600 text-right">${window.fmtQtd(l.qtd)} ${l.und}</td>
-                    <td class="py-3 text-gray-500">${l.validade || '-'}</td>
+                    <td class="py-3 text-gray-500">${l.validade ? new Date(l.validade).toLocaleDateString('pt-BR') : '-'}</td>
                 </tr>
             `).join('');
             document.getElementById('modal-detalhes-estoque').classList.remove('hidden');
