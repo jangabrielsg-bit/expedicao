@@ -109,6 +109,26 @@
                     </div>
                 </div>
 
+                <div id="view-estoque" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="ph ph-stack text-brand-500 mr-2 text-xl"></i> Estoque Atual
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="text-gray-500 border-b">
+                                        <th class="py-2">Produto</th>
+                                        <th class="py-2">Lote</th>
+                                        <th class="py-2 text-right">Qtd</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-estoque" class="divide-y divide-gray-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="view-entrada" class="hidden space-y-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
                         <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -258,6 +278,17 @@
                 estoque = []; let total = 0;
                 snap.forEach(d => { const item = d.data(); estoque.push(item); total += item.qtd; });
                 document.getElementById('dash-total-items').innerText = window.fmtQtd(total) + ' kg';
+                
+                const tbodyEstoque = document.getElementById('tbody-estoque');
+                if (tbodyEstoque) {
+                    tbodyEstoque.innerHTML = estoque.map(item => `
+                        <tr>
+                            <td class="py-3 font-bold">${item.nome} <br><span class="text-xs text-gray-400">Setor: ${item.setor}</span></td>
+                            <td class="py-3">${item.lote}</td>
+                            <td class="py-3 text-right font-bold text-brand-600">${item.qtd} ${item.und}</td>
+                        </tr>
+                    `).join('');
+                }
             });
         }
 
@@ -330,4 +361,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
